@@ -6,6 +6,8 @@ import { ArticleGenerator } from './services/article'
 import dotenv from 'dotenv'
 import fs from 'fs/promises'
 import path from 'path'
+import { SimilarityService } from './services/analytics'
+import { AnalyticsDB } from './database/sqlite3'
 
 dotenv.config()
 
@@ -38,16 +40,17 @@ async function getLatestArticlePath(): Promise<string> {
 
 async function main() {
     // Get title from command line arguments
-    const title = process.argv[2]
+    const userid = process.argv[2]
+    const title = process.argv[3]
     
-    if (!title) {
-        console.error('Please provide a title: npm run register "Your Article Title"')
+    if (!userid || !title) {
+        console.error('Please provide a userid and title: npm run register "Your Article Title"')
         process.exit(1)
     }
 
     try {
         // Step 1a: Fetch user's feed for long-term memory
-        const feedService = new FetchUserCasts()
+        const feedService = new FetchUserCasts(userid)
         const casts = await feedService.getUserCasts()
 
         // Step 1b: Fetch user's reactions for short-term memory
@@ -56,14 +59,19 @@ async function main() {
         
         // Step 2: Process memories
         const memoryService = new MemoryService()
-        await memoryService.processLongTermMemory(casts)
-        await memoryService.processShortTermMemory(casts)
+        const longTermCollection = await memoryService.processLongTermMemory(casts)
+        const shortTermCollection = await memoryService.processShortTermMemory(casts)
 
-        // Step 3: Generate article
-        const articleGenerator = new ArticleGenerator()
+        // Step 3: Calculate similarities
+        const analyticsDB = new AnalyticsDB()
+        const similarityService = new SimilarityService(longTermCollection, shortTermCollection, analyticsDB)
+        await similarityService.updateSimilarityScore()
+
+        // Step 4: Generate article
+        const articleGenerator = new ArticleGenerator(longTermCollection, shortTermCollection)
         await articleGenerator.generateArticle()
         
-        // Step 4: Get the latest article path
+        // Step 5: Get the latest article path
         const articlePath = await getLatestArticlePath()
         const description = `Article generated on ${new Date().toISOString()}`
         const creatorAddress = process.env.WALLET_ADDRESS as string
