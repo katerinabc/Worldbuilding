@@ -18,37 +18,38 @@ export class MemoryService {
                 metadata: {description: "users long term memory"}
             });
             
-            console.log('long term collection created')
+            console.log('long term collection created or gotten')
             
-
-        } catch (error) {
-            // if collection does not exist create it
-            console.log('creating new long-term collection...');
-            this.longTermCollection = await client.createCollection({
-                name: COLLECTIONS.LONG_TERM,
-                embeddingFunction: embedder,
-                metadata: {description: "users long term memory"}
-            });
+        } catch (error) { 
+            console.error('failed to create or get collection: ', error);
+            throw error;
+            // // if collection does not exist create it
+            // console.log('creating new long-term collection...');
+            // this.longTermCollection = await client.createCollection({
+            //     name: COLLECTIONS.LONG_TERM,
+            //     embeddingFunction: embedder,
+            //     metadata: {description: "users long term memory"}
+            // });
         };
         try {
-            // await client.deleteCollection(this.shortTermCollection);
-            // console.log('short term collection deleted')
             this.shortTermCollection = await client.getOrCreateCollection({
                 name: COLLECTIONS.SHORT_TERM,
                 embeddingFunction: embedder,
                 metadata: {description: "users short term memory"}
             });
-            console.log('short term collection already exists, skipping initialization')
+            console.log('short term collection created or gotten')
             
 
         } catch (error) {
-            //if collection does not exist create it
-            console.log('creating new short-term collection...');
-            this.shortTermCollection = await client.createCollection({
-                name: COLLECTIONS.SHORT_TERM,
-                embeddingFunction: embedder,
-                metadata: {description: "users short term memory"}
-            });
+            console.error('failed to create or get collection: ', error);
+            throw error;
+            // //if collection does not exist create it
+            // console.log('creating new short-term collection...');
+            // this.shortTermCollection = await client.createCollection({
+            //     name: COLLECTIONS.SHORT_TERM,
+            //     embeddingFunction: embedder,
+            //     metadata: {description: "users short term memory"}
+            // });
         }
             return { 
                 longTermCollection: this.longTermCollection, 
