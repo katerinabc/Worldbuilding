@@ -7,14 +7,15 @@ dotenv.config();
 export class FetchUserCasts {
     private readonly apiKey: string;
     private readonly baseUrl: string = 'https://api.neynar.com/v2';
-    private readonly targetUserId: string = '12021';
+    private targetUserId: string;
 
-    constructor() {
+    constructor(userId: string = '12021') { //adding default value for userid for testing
         const apiKey = process.env.NEYNAR_API_KEY;
         if (!apiKey) {
             throw new Error('NEYNAR_API_KEY not found in environment variables');
         }
         this.apiKey = apiKey;
+        this.targetUserId = userId;
     }
 
     /**

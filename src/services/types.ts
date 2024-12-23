@@ -78,3 +78,8 @@ export interface Memory {
     vectors: EmbeddingVector[];     // Array of all our vectors
     lastUpdated: string;            // When this memory was last modified
 }
+
+// Add this with the other interfaces
+export interface EmbeddingFunction {
+    generate(texts: string[]): Promise<number[][]>;
+}

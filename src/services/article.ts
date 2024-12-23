@@ -1,6 +1,4 @@
 import axios from 'axios';
-import { MemoryService } from './memory';
-import fs from 'fs/promises';
 
 interface ArticleSection {
     title: string;
@@ -10,82 +8,122 @@ interface ArticleSection {
 
 export class ArticleGenerator {
     private readonly baseUrl: string = 'https://llama8b.gaia.domains/v1';
-    private readonly memoryService: MemoryService;
+    private readonly longTermCollection: any;
+    private readonly shortTermCollection: any;
 
-    constructor() {
-        this.memoryService = new MemoryService();
+    // Base prompt template
+    private readonly sectionPromptTemplate = `
+    Write a blog-style article in the first person singular that analyzes and connects these {section_type} topics:
+    {casts}
+
+    Guidelines:
+    1. Start with a personalized introduction. Use your knowledge of the user.
+    2. For Core Interests, dive deep into the main themes. Use content from the users digital twin to enhance this section
+    3. For Related Topics, show how they connect to the core interests
+    4. For Outer Space, no need to find creative ways to connect these seemingly unrelated topics. Add one sentence why they are an outer-space topic. 
+    5. End with asking the reader to collect this article. This should be the last sentence in the article. nothing comes after it.
+
+    Write the article as if you are the narrator of the user's life. Imagine you live in the users head and are sorting through the casts, filing them in different sections based on their content.
+    for every cast that you file in a section you make a commment why it belongs in this section. 
+    Make the article sound like a monologue. 
+
+    Remember that these casts are written by other people than the user. The user only liked or recasted them.
+
+    Do not worry about clear formatting and engaging headings.
+    Do not use any emojis.
+    The article should be more than 500 words andless than 3000 words. 
+    `;
+
+    // Define guidelines for each section type
+    private readonly guidelinesBySection = {
+        core: [
+            "1. Dive deep into the main themes",
+            "2. Show how these topics connect to each other",
+            "3. Write as if you are the narrator of the user's life",
+            "4. For each cast, explain why it's a core interest",
+            "5. Make it sound like a monologue"
+        ],
+        related: [
+            "1. Show how these topics connect to the core interests",
+            "2. Explain why these topics are relevant but not core",
+            "3. Keep the narrative flow from the core section",
+            "4. Make connections between different related topics",
+            "5. Maintain the monologue style"
+        ],
+        outerSpace: [
+            "1. Acknowledge these topics are different from usual interests",
+            "2. No need to force connections to other topics",
+            "3. Explain what makes each topic intriguing",
+            "4. Keep a curious, exploratory tone",
+            "5. Stay in the monologue style"
+        ]
     }
 
-    /**
-     * Generate an article based on user's memories
-     */
-    async generateArticle(): Promise<string> {
-        // 1. Get similarities from memory
-        const similarities = await this.memoryService.findSimilarCastsByCategory();
+    constructor(shortTermCollection: any, longTermCollection: any) {
+        this.shortTermCollection = shortTermCollection;
+        this.longTermCollection = longTermCollection;
+    }
 
-        // 2. Get user's writing style examples from long-term memory. 
-        // for testing limited to 5 posts.
-        const userPosts = await this.memoryService.getLongTermMemoryPosts(3); // Reduce from 5 to 3
-        const styleExamples = userPosts
-            .map(post => post.text)
-            .slice(0, 3)  // Take only first 3 examples
-            .join('\n\n');
+    private async getUserContext(): Promise<string> {
+       try {
+        //get users posts from long-term memory
+        const userPosts = await this.longTermCollection.get({
+            include:["documents"]
+        });
+        if (!userPosts || !userPosts.documents) {
+            throw new Error('No user posts found');
+        }
 
-        // 3. Prepare sections
-        const sections: ArticleSection[] = [
-            {
-                title: "Core Interests",
-                content: similarities.core
-                    .slice(0, 5)  // Take only top 5
-                    .map(s => `${s.like.text} (Similarity: ${(s.similarity * 100).toFixed(1)}%)`),
-                similarity: 'core'
-            },
-            {
-                title: "Related Topics",
-                content: similarities.related
-                    .slice(0, 3)  // Take only top 3
-                    .map(s => `${s.like.text} (Similarity: ${(s.similarity * 100).toFixed(1)}%)`),
-                similarity: 'related'
-            },
-            {
-                title: "Outer Space",
-                content: similarities.outerSpace
-                    .slice(0, 2)  // Take only top 2
-                    .map(s => `${s.like.text} (Similarity: ${(s.similarity * 100).toFixed(1)}%)`),
-                similarity: 'outerSpace'
-            }
-        ];
+        // create a context string user's posts
+        return `
+        Here is background about the user based on their writing:
+        ${userPosts.documents.join('\n')}
+        
+        Use this context to understand the user's interests and writing style.
+        Mimic their tone and perspective when writing the article.
+        `;
 
-        // 4. Create prompt
-        const prompt = this.createPrompt(sections);
+       } catch (error) {
+        console.error('Error getting user context:', error);
+        throw error;
+       }
+    }
 
-        // 5. Generate article using Gaia.node
+    private createSectionPrompt(sectionType: 'core' | 'related' | 'outerSpace', casts: string[]): string {
+        return this.sectionPromptTemplate
+            .replace('{section_type}', sectionType)
+            .replace('{casts}', casts.join('\n'))
+            .replace('{guidelines}', this.guidelinesBySection[sectionType].join('\n'));
+    }
+
+    private async generateCoreSection(): Promise<string> {
         try {
-            console.log('Making request to Gaia API with payload:', {
-                messages: [
-                    {
-                        role: "system",
-                        content: `You are crafting a newsletter-style article using the user's personal writing style. Here are examples of the user's writing:\n\n${styleExamples}\n\nEmulate this writing style. Connect different topics in ways that feel natural to the user's voice. You audience are friends and acquaitances. You are writing to clarify your thinking not to sell a product. Your goal is to showcase your knowledge and thought about topics.`
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                model: "llama",
-                temperature: 0.7,
-                max_tokens: 1000
+            const coreCasts = await this.shortTermCollection.get({
+                where: {
+                    'similarity_category': 'core'
+                }
             });
+
+            if (!coreCasts || !coreCasts.documents) {
+                throw new Error('No core casts found');
+            }
+
+            // Get user context
+            const userContext = await this.getUserContext();
+
+            // Add user context to the prompt
+            const prompt = this.createSectionPrompt('core', coreCasts.documents);
+            const fullPrompt = `${userContext}\n\n${prompt}`;
 
             const response = await axios.post(`${this.baseUrl}/chat/completions`, {
                 messages: [
                     {
                         role: "system",
-                        content: `You are crafting a newsletter-style article using the user's personal writing style. Here are examples of the user's writing:\n\n${styleExamples}\n\nEmulate this writing style. Connect different topics in ways that feel natural to the user's voice. You audience are friends and acquaitances. You are writing to clarify your thinking not to sell a product. Your goal is to showcase your knowledge and thought about topics.`
+                        content: "You are crafting a section of a newsletter-style article. Write in a personal, reflective tone."
                     },
                     {
                         role: "user",
-                        content: prompt
+                        content: fullPrompt
                     }
                 ],
                 model: "llama",
@@ -93,63 +131,105 @@ export class ArticleGenerator {
                 max_tokens: 1000
             });
 
-            const articleContent = response.data.choices[0].message.content;
-
-            // Add this new code to save the article
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const filename = `articles/article-${timestamp}.txt`;
-            
-            // Create articles directory if it doesn't exist
-            await fs.mkdir('articles', { recursive: true });
-            
-            // Save the article
-            await fs.writeFile(filename, articleContent, 'utf-8');
-            console.log(`Article saved to ${filename}`);
-
-            return articleContent;
+            return response.data.choices[0].message.content;
 
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                console.error('Detailed error information:');
-                console.error('Status:', error.response?.status);
-                console.error('Status Text:', error.response?.statusText);
-                console.error('Response Data:', error.response?.data);
-                console.error('Request URL:', error.config?.url);
-                console.error('Request Method:', error.config?.method);
-                console.error('Request Headers:', error.config?.headers);
-            }
-            throw new Error(`Failed to generate article: ${error}`);
+            console.error('Error generating core section:', error);
+            throw error;
         }
     }
 
-    /**
-     * Create a prompt for the LLM based on the sections
-     */
-    private createPrompt(sections: ArticleSection[]): string {
-        return `
-Write a blog-style article that analyzes and connects the following content:
+    private async generateRelatedSection(): Promise<string> {
+        try {
+            const relatedCasts = await this.shortTermCollection.get({
+                where: {
+                    'similarity_category': 'related'
+                }
+            });
 
-${sections.map(section => `
-# ${section.title}
-${section.content.join('\n')}
-`).join('\n')}
+            if (!relatedCasts || !relatedCasts.documents) {
+                throw new Error('No related casts found');
+            }
 
-Guidelines:
-1. Start with a personalized introduction. Use your knowledge of the user.
-2. For Core Interests, dive deep into the main themes. Use content from the users digital twin to enhance this section
-3. For Related Topics, show how they connect to the core interests
-4. For Outer Space, no need to find creative ways to connect these seemingly unrelated topics. Add one sentence why they are an outer-space topic. 
-5. End with asking the reader to collect this article. This should be the last sentence in the article. nothing comes after it.
+            // Get user context
+            const userContext = await this.getUserContext();
 
-Write the article as if you are the narrator of the user's life. Imagine you live in the users head and are sorting through the casts, filing them in different sections based on their content.
-for every cast that you file in a section you make a commment why it belongs in this section. 
-Make the article sound like a monologue. 
+            // Add user context to the prompt
+            const prompt = this.createSectionPrompt('related', relatedCasts.documents);
+            const fullPrompt = `${userContext}\n\n${prompt}`;
 
-Remember that these casts are written by other people than the user. The user only liked or recasted them.
+            const response = await axios.post(`${this.baseUrl}/chat/completions`, {
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are crafting a section of a newsletter-style article. Write in a personal, reflective tone."
+                    },
+                    {
+                        role: "user",
+                        content: fullPrompt
+                    }
+                ],
+                model: "llama",
+                temperature: 0.7,
+                max_tokens: 1000
+            });
 
-Do not worry about clear formatting and engaging headings.
-Do not use any emojis.
-The article should be more than 750 words andless than 3000 words. 
-`;
+            return response.data.choices[0].message.content;
+
+        } catch (error) {
+            console.error('Error generating related section:', error);
+            throw error;
+        }
     }
-} 
+
+    private async generateOuterSpaceSection(): Promise<string> {
+        try {
+            const outerSpaceCasts = await this.shortTermCollection.get({
+                where: {
+                    'similarity_category': 'outerSpace'
+                }
+            });
+
+            if (!outerSpaceCasts || !outerSpaceCasts.documents) {
+                throw new Error('No outer space casts found');
+            }
+
+            // Get user context
+            const userContext = await this.getUserContext();
+
+            // Add user context to the prompt
+            const prompt = this.createSectionPrompt('outerSpace', outerSpaceCasts.documents);
+            const fullPrompt = `${userContext}\n\n${prompt}`;
+
+            const response = await axios.post(`${this.baseUrl}/chat/completions`, {
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are crafting a section of a newsletter-style article. Write in a personal, reflective tone."
+                    },
+                    {
+                        role: "user",
+                        content: fullPrompt
+                    }
+                ],
+                model: "llama",
+                temperature: 0.7,
+                max_tokens: 1000
+            });
+
+            return response.data.choices[0].message.content;
+
+        } catch (error) {
+            console.error('Error generating outer space section:', error);
+            throw error;
+        }
+    }
+
+    async generateArticle(): Promise<string> {
+        const coreSection = await this.generateCoreSection();
+        const relatedSection = await this.generateRelatedSection();
+        const outerSpaceSection = await this.generateOuterSpaceSection();
+
+        return `${coreSection}\n\n${relatedSection}\n\n${outerSpaceSection}`;
+    }
+}

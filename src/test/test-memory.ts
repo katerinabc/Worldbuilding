@@ -1,78 +1,69 @@
 import { FetchUserCasts } from '../services/feed';
-import { FetchReactions } from '../services/reactions';
+import { FetchReactions } from '../services/reactions'
 import { MemoryService } from '../services/memory';
 
-async function buildMemory() {
+async function testMemory() {
     try {
+        // 1. Initialize services
+        console.log('Initializing services...');
         const memoryService = new MemoryService();
-
-        // 1. Process Long-Term Memory (User's Feed)
-        console.log('Fetching user casts for long-term memory...');
         const feedService = new FetchUserCasts();
+        const reactionsService = new FetchReactions();
+
+        // 2. Initialize collections
+        console.log('Creating Chroma collections...');
+        const collections = await memoryService.initializeCollections();
+        console.log('Collections created successfully');
+
+        // 3a. Fetch user casts
+        console.log('\nFetching user casts...');
         const allCasts = await feedService.getUserCasts();
-        const feedCasts = allCasts.slice(0, 15);  // Take 15 most recent
-        console.log(`Processing ${feedCasts.length} out of ${allCasts.length} feed casts`);
+        const recentCasts = allCasts.slice(0, 15);  // Take 15 most recent
+        console.log(`Fetched ${recentCasts.length} out of ${allCasts.length} total casts`);
 
-        console.log('\nGenerating long-term memory embeddings...');
-        await memoryService.processLongTermMemory(feedCasts);
+        // 3b Fetch users reactions
+        console.log('\nFetching user reactions...');
+        const allReactions = await reactionsService.getLikedCasts();
+        const recentReactions = allReactions.slice(0,5);
+        console.log(`Fetched ${recentReactions.length} out of ${allReactions.length} total casts`);
 
-        // 2. Process Short-Term Memory (User's Likes)
-        console.log('\nFetching user reactions for short-term memory...');
-        const reactionService = new FetchReactions();
-        const allReactions = await reactionService.getLikedCasts();
-        const reactions = allReactions.slice(0, 5)
-        
-        // Extract casts from reactions
-        const likedCasts = reactions.map(reaction => reaction.cast);
-        console.log(`Processing ${likedCasts.length} liked casts`);
 
-        console.log('\nGenerating short-term memory embeddings...');
-        await memoryService.processShortTermMemory(likedCasts);
+        // 4. Process casts into long-term memory
+        console.log('\nProcessing casts into long-term memory...');
+        await memoryService.processLongTermMemory(recentCasts);
 
-        // 3. Print processed casts
-        console.log('\nProcessed feed casts (long-term memory):');
-        feedCasts.forEach((cast, index) => {
-            console.log(`\n--- Feed Cast ${index + 1} ---`);
+        // 4b. Process casts into short-term memory
+        console.log('\nProcessing casts into short-term memory...');
+        await memoryService.processShortTermMemory(recentReactions.map(reaction => reaction.cast));
+
+        // 6. Print processed casts for verification
+        console.log('\nProcessed casts:');
+        recentCasts.forEach((cast, index) => {
+            console.log(`\n--- Cast ${index + 1} ---`);
             console.log(`Text: "${cast.text}"`);
             console.log(`Time: ${cast.timestamp}`);
             console.log(`Author: @${cast.author.username}`);
         });
-
-        console.log('\nProcessed liked casts (short-term memory):');
-        likedCasts.forEach((cast, index) => {
-            console.log(`\n--- Liked Cast ${index + 1} ---`);
-            console.log(`Text: "${cast.text}"`);
-            console.log(`Time: ${cast.timestamp}`);
-            console.log(`Author: @${cast.author.username}`);
+        recentReactions.forEach((reaction, index) => {
+            console.log(`\n--- Cast ${index + 1} ---`);
+            console.log(`Text: "${reaction.cast.text}"`);
+            console.log(`Time: ${reaction.cast.timestamp}`);
+            console.log(`Author: @${reaction.cast.author.username}`);
         });
 
-        // 4. Find and display similarities
-        console.log('\nAnalyzing similarities between feed and likes...');
-        const similarities = await memoryService.findSimilarCastsByCategory();
-        
-        console.log('\nSimilarity Results:');
-        console.log(`Core matches (>= 80% similar): ${similarities.core.length}`);
-        console.log(`Related matches (50-79% similar): ${similarities.related.length}`);
-        console.log(`Outer Space matches (10-49% similar): ${similarities.outerSpace.length}`);
+        // 7. peeking into the collections returning everythign but embeddings
+        const peekShortTerm = await memoryService.peekShortTermMemory();
+        const peekLongTerm = await memoryService.peekLongTermMemory();
 
-        // 5. Show some example matches
-        if (similarities.core.length > 0) {
-            console.log('\nExample Core Match:');
-            const example = similarities.core[0];
-            console.log(`Feed: "${example.feed.text}"`);
-            console.log(`Like: "${example.like.text}"`);
-            console.log(`Similarity: ${(example.similarity * 100).toFixed(1)}%`);
-        }
+        console.log('Peek into short term memory:',peekShortTerm);
+        console.log('Peek into long term memory:',peekLongTerm);
 
-        if (similarities.outerSpace.length > 0) {
-            console.log('\nExample Outer Space Match:');
-            const example = similarities.outerSpace[0];
-            console.log(`Feed: "${example.feed.text}"`);
-            console.log(`Like: "${example.like.text}"`);
-            console.log(`Similarity: ${(example.similarity * 100).toFixed(1)}%`);
-        }
+        console.log('Peek into short term memory:',peekShortTerm);
+        console.log('Peek into long term memory:',peekLongTerm);
 
-    } catch (error: unknown) {
+        console.log('\nTest completed successfully!');
+
+    } catch (error) {
         if (error instanceof Error) {
             console.error('Error:', error.message);
         } else {
@@ -82,4 +73,4 @@ async function buildMemory() {
 }
 
 // Run the test
-buildMemory(); 
+testMemory();

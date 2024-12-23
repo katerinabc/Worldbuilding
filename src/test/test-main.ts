@@ -6,6 +6,9 @@ import { registerArticle } from '../services/register'
 import dotenv from 'dotenv'
 import fs from 'fs/promises'
 import path from 'path'
+import { AnalyticsDB } from '../database/sqlite3'
+import { SimilarityService } from '../services/analytics'
+import { client, COLLECTIONS, embedder } from '../database/client'
 
 dotenv.config()
 
@@ -42,20 +45,63 @@ async function testFetchReactions() {
 async function testMemoryProcessing(casts: any[]) {
     console.log('\nTesting: Memory Processing')
     try {
+        // Initialize MemoryService and collections first
         const memoryService = new MemoryService()
-        await memoryService.processLongTermMemory(casts)
-        await memoryService.processShortTermMemory(casts)
+        console.log('Initializing collections...')
+        await memoryService.initializeCollections()
+        console.log('Collections initialized successfully')
+
+        // Validate casts before processing
+        const validCasts = casts.filter(cast => {
+            if (!cast || !cast.text || !cast.author || !cast.hash) {
+                console.log('Skipping invalid cast:', cast);
+                return false;
+            }
+            return true;
+        });
+
+        console.log(`Found ${validCasts.length} valid casts out of ${casts.length} total`);
+
+        // Process memories
+        console.log('Processing long-term memory...')
+        await memoryService.processLongTermMemory(validCasts)
+        console.log('Processing short-term memory...')
+        await memoryService.processShortTermMemory(validCasts)
         console.log('✅ Successfully processed memories')
+
+        // Get collections for next steps
+        const longTermCollection = await client.getCollection({
+            name: COLLECTIONS.LONG_TERM,
+            embeddingFunction: embedder,
+        })
+        const shortTermCollection = await client.getCollection({
+            name: COLLECTIONS.SHORT_TERM,
+            embeddingFunction: embedder,
+        })
+        return { longTermCollection, shortTermCollection }
     } catch (error) {
         console.error('❌ Failed to process memories:', error)
         throw error
     }
 }
 
-async function testArticleGeneration() {
+async function testSimilarityService(longTermCollection: any, shortTermCollection: any) {
+    console.log('\nTesting: Similarity Service')
+    try {
+        const analyticsDB = new AnalyticsDB()
+        const similarityService = new SimilarityService(longTermCollection, shortTermCollection, analyticsDB)
+        await similarityService.updateSimilarityScore()
+        console.log('✅ Successfully updated similarity score')
+    } catch (error) {
+        console.error('❌ Failed to create analytics tables:', error)
+        throw error
+    }
+}
+
+async function testArticleGeneration(longTermCollection: any, shortTermCollection: any) {
     console.log('\nTesting: Article Generation')
     try {
-        const articleGenerator = new ArticleGenerator()
+        const articleGenerator = new ArticleGenerator(shortTermCollection, longTermCollection)
         const article = await articleGenerator.generateArticle()
         console.log('✅ Successfully generated article')
         console.log('Preview:', article.substring(0, 100) + '...')
@@ -104,8 +150,9 @@ async function runTests() {
     try {
         const casts = await testFetchUserCasts()
         await testFetchReactions()
-        await testMemoryProcessing(casts)
-        await testArticleGeneration()
+        const collections = await testMemoryProcessing(casts)
+        await testSimilarityService(collections.longTermCollection, collections.shortTermCollection)
+        const article = await testArticleGeneration(collections.longTermCollection, collections.shortTermCollection)
         await testArticleRegistration(title)
         
         console.log('\n✅ All tests completed successfully!')
