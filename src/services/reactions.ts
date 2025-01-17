@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { AxiosResponse } from 'axios';
 import dotenv from 'dotenv';
 import { Reaction, ReactionsResponse } from './types';
 
@@ -9,13 +10,13 @@ export class FetchReactions {
     private readonly baseUrl: string = 'https://api.neynar.com/v2';
     private targetUserId: string;
 
-    constructor(targetUserId: string = '12021') {
+    constructor(userId: string = '12021') {
         const apiKey = process.env.NEYNAR_API_KEY;
         if (!apiKey) {
             throw new Error('NEYNAR_API_KEY not found in environment variables');
         }
         this.apiKey = apiKey;
-        this.targetUserId = targetUserId;
+        this.targetUserId = userId;
     }
 
     /**
@@ -23,10 +24,24 @@ export class FetchReactions {
      */
     async getLikedCasts(): Promise<Reaction[]> {
         try {
+            let allReactions: Reaction[] = [];
+            let cursor = null;
+            const TARGET_LIMIT = 500;
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-            const response = await axios.get<ReactionsResponse>(
+            // log API endpoint
+            console.log('reactions API endpoing:', `${this.baseUrl}/farcaste/reactions/user`);
+
+            // keep fetching until we have 500 reactions or we have no more reactions to fetch for the time period
+            while (allReactions.length < TARGET_LIMIT) {
+                console.log('making api request for reactions with with params:', {
+                    fid: this.targetUserId,
+                    limit: Math.min(100, TARGET_LIMIT - allReactions.length),
+                    type: 'like',
+                    cursor: cursor,
+                })
+                const response: AxiosResponse<ReactionsResponse> = await axios.get(
                 `${this.baseUrl}/farcaster/reactions/user`,
                 {
                     headers: {
@@ -35,22 +50,56 @@ export class FetchReactions {
                     },
                     params: {
                         fid: this.targetUserId,
+                        limit: Math.min(100, TARGET_LIMIT - allReactions.length),
                         type: 'like',
-                        limit: 100,
+                        cursor: cursor,
+                        include_replies: true
+                        
                     }
                 }
             );
 
-            return response.data.reactions.filter(reaction => {
+            // logging response for debugging
+            console.log('Reactions:API response', {
+                status: response.status, 
+                dataLength: response.data.reactions.length,
+                cursor: response.data.next?.cursor,
+                // fid: response.data.fid
+            })
+
+            const newReactions = response.data.reactions.filter(reaction => {
                 const reactionDate = new Date(reaction.reaction_timestamp);
                 return reactionDate >= sevenDaysAgo;
             });
+            allReactions = [...allReactions, ...newReactions]
+            console.log(`Reactions:Fetched ${newReactions.length} reactions (Total: ${allReactions.length})`)
 
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                throw new Error(`Failed to fetch likes: ${error.message}`);
+            //check if we have more reactions to fetch
+            cursor = response.data.next?.cursor;
+            if(!cursor || newReactions.length < TARGET_LIMIT) {
+                break;
             }
-            throw error;
+
+            // small delay between requests to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        console.log(`Reactions:completed fetching ${allReactions.length} total reactions`);
+        return allReactions;
+
+            // return response.data.reactions.filter(reaction => {
+            //     const reactionDate = new Date(reaction.reaction_timestamp);
+            //     return reactionDate >= sevenDaysAgo;
+
+        } catch (requestError) {
+            if (axios.isAxiosError(requestError)) {
+                console.error('reactions API error details:', {
+                    status: requestError.response?.status,
+                    statusText: requestError.response?.statusText,
+                    data: requestError.response?.data,
+                    params: requestError.response?.config.params
+                })
+            }
+            throw requestError;
         }
     }
 } 

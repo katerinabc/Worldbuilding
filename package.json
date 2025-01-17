@@ -2,25 +2,38 @@
   "name": "storyprompts",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.ts",
   "scripts": {
     "test": "ts-node src/test.ts",
+    "test:reactions": "ts-node src/test/test-reactions.ts",
     "test:memory": "ts-node src/test/test-memory.ts",
+    "test:analytics": "ts-node src/test/test-analytics.ts",
     "test:generatearticle": "ts-node src/test/test-article.ts",
+    "test:writetofc": "ts-node src/test/test-writetofc.ts",
     "test:main": "ts-node src/test/test-main.ts",
+    "test:collections": "ts-node src/test/test-collections.ts",
     "start": "ts-node src/main.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@neynar/nodejs-sdk": "^1.69.1",
     "@pinata/sdk": "^2.1.0",
     "@story-protocol/core-sdk": "^1.2.0-rc.3",
     "@types/node": "^22.10.2",
     "axios": "^1.7.9",
+    "better-sqlite3": "^11.7.0",
+    "chromadb": "^1.9.4",
+    "chromadb-default-embed": "^2.13.2",
     "dotenv": "^16.4.7",
+    "node-cron": "^3.0.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "viem": "^2.21.55"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/sqlite3": "^3.1.11"
   }
 }

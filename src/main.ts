@@ -1,42 +1,14 @@
-import { registerArticle } from './services/register'
 import { FetchUserCasts } from './services/feed'
 import { FetchReactions } from './services/reactions'
 import { MemoryService } from './services/memory'
 import { ArticleGenerator } from './services/article'
-import dotenv from 'dotenv'
-import fs from 'fs/promises'
-import path from 'path'
 import { SimilarityService } from './services/analytics'
 import { AnalyticsDB } from './database/sqlite3'
+import { getLatestArticlePath } from './services/getlatestarticle'
+import { registerArticle } from './services/register'
 
+import dotenv from 'dotenv'
 dotenv.config()
-
-async function getLatestArticlePath(): Promise<string> {
-    const articlesDir = 'articles'
-    try {
-        const files = await fs.readdir(articlesDir)
-        if (files.length === 0) {
-            throw new Error('No articles found in the articles directory')
-        }
-        
-        // Get the most recently created file
-        const filePaths = files.map(file => path.join(articlesDir, file))
-        const fileStats = await Promise.all(
-            filePaths.map(async filePath => ({
-                path: filePath,
-                stat: await fs.stat(filePath)
-            }))
-        )
-        
-        const latestFile = fileStats.reduce((latest, current) => {
-            return latest.stat.mtime > current.stat.mtime ? latest : current
-        })
-        
-        return latestFile.path
-    } catch (error) {
-        throw new Error(`Failed to get latest article: ${error}`)
-    }
-}
 
 async function main() {
     // Get title from command line arguments
@@ -54,11 +26,12 @@ async function main() {
         const casts = await feedService.getUserCasts()
 
         // Step 1b: Fetch user's reactions for short-term memory
-        const reactionsService = new FetchReactions()
+        const reactionsService = new FetchReactions(userid)
         const reactions = await reactionsService.getLikedCasts()
-        
+
         // Step 2: Process memories
         const memoryService = new MemoryService()
+        await memoryService.initializeCollections()
         const longTermCollection = await memoryService.processLongTermMemory(casts)
         const shortTermCollection = await memoryService.processShortTermMemory(casts)
 

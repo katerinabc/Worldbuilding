@@ -7,6 +7,8 @@ import fs from 'fs'
 
 dotenv.config()
 
+// TODO: get latest article .
+
 /**
  * Registers an article as intellectual property on Story Protocol
  * This process includes:

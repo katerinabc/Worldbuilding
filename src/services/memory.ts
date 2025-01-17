@@ -59,40 +59,64 @@ export class MemoryService {
 
     /** Core function to process casts and generate their embeddings */
 
-    async processLongTermMemory(casts: Cast[]): Promise<void> {
+    async processLongTermMemory(casts: Cast[]) {
         try {
+            // process in smaller batches
+            const BATCH_SIZE = 50;
+            for (let i = 0; i < casts.length; i += BATCH_SIZE) {
+                const batch = casts.slice(i, i + BATCH_SIZE);
+                console.log(`Processing batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`);
+            
+                await this.longTermCollection.add({
+                    ids: batch.map(cast => cast.hash), 
+                    documents: batch.map(cast => cast.text),
+                    metadatas: batch.map(cast => ({
+                        timestamp: cast.timestamp,
+                        author: cast.author.username,
+                        hash: cast.hash,
+                        // type: 'feed'
+                }))
+                // documents: casts.map(cast => cast.text),
+            });
             console.log('processing long term memory...')
-            await this.longTermCollection.add({
-                ids: casts.map(cast => cast.hash), 
-                metadatas: casts.map(cast => ({
-                    timestamp: cast.timestamp,
-                    author: cast.author.username,
-                    hash: cast.hash,
-                    type: 'feed'
-            })),
-            documents: casts.map(cast => cast.text),
-        });
+
+            //add a delay between batches
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            } 
+            return this.longTermCollection;
         } catch (error) {
-            console.error('failed processing long term memory:', error);
-            throw error;
+                console.error('failed processing long term memory:', error);
+                throw error;
+            }
         }
-    }
 
     async processShortTermMemory(casts: Cast[]): Promise<void> {
-        try { //i'm pretty sure the metadata isn't stored properly
+        try { 
+            // process in smaller batches
+            const BATCH_SIZE = 50;
+            for (let i = 0; i < casts.length; i += BATCH_SIZE) {
+                const batch = casts.slice(i, i + BATCH_SIZE);
+                console.log(`Processing batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`)
+
+                await this.shortTermCollection.add({
+                    ids: batch.map(cast => cast.hash),
+                    documents: batch.map(cast => cast.text),
+                    metadatas: batch.map(cast => ({
+                        timestamp: cast.timestamp,
+                        author: cast.author.username,
+                        hash: cast.hash,
+                        type: 'like',
+                        similarity: 0, // initial similarity score
+                        similarity_category: 'outerSpace' // initial category
+                    })),
+                })
             console.log('processing short term memory...')
-            await this.shortTermCollection.upsert({
-                ids: casts.map(cast => cast.hash),
-                metadatas: casts.map(cast => ({
-                    timestamp: cast.timestamp,
-                    author: cast.author.username,
-                    hash: cast.hash,
-                    type: 'like',
-                    similarity: 0, // initial similarity score
-                    similarity_category: 'outerSpace' // initial category
-                })),
-                documents: casts.map(cast => cast.text),
-            });
+
+            // delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        return this.shortTermCollection;
+            
         } catch (error) {
             console.error('failed processing short term memory:', error);
             throw error;

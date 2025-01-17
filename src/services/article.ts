@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-interface ArticleSection {
+interface ArticleSection { // move this to types and import types
     title: string;
     content: string[];
     similarity: 'core' | 'related' | 'outerSpace';
@@ -96,7 +96,7 @@ export class ArticleGenerator {
             .replace('{guidelines}', this.guidelinesBySection[sectionType].join('\n'));
     }
 
-    private async generateCoreSection(): Promise<string> {
+    public async generateCoreSection(): Promise<string> {
         try {
             const coreCasts = await this.shortTermCollection.get({
                 where: {
@@ -139,7 +139,7 @@ export class ArticleGenerator {
         }
     }
 
-    private async generateRelatedSection(): Promise<string> {
+    public async generateRelatedSection(): Promise<string> {
         try {
             const relatedCasts = await this.shortTermCollection.get({
                 where: {
@@ -182,7 +182,7 @@ export class ArticleGenerator {
         }
     }
 
-    private async generateOuterSpaceSection(): Promise<string> {
+    public async generateOuterSpaceSection(): Promise<string> {
         try {
             const outerSpaceCasts = await this.shortTermCollection.get({
                 where: {

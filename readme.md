@@ -44,9 +44,18 @@ npm install
 ## Usage
 
 ### Generate and Register an Article
+
+Run docker for chromadb database. 
+```bash
+docker run -p 8000:8000 chromadb/chroma 
+```
+
+
 ```bash
 npm run start "Your Article Title"
 ```
+
+
 
 ### Run Tests
 ```bash
@@ -103,13 +112,21 @@ src/
 
 ## Future Improvements
 
-- [ ] Support multiple user IDs
+- [ ] Improve error handling for API responses
+
+### data fetching and processing
 - [ ] Add time range filtering (30 days limit)
-- [ ] Improve channel handling
+- [ ] dynamic limit for number of casts to fetch: First time fetch all, second time only new casts
+- [ ] Improve channel handling (from parent_channel field to channel-id field)
 - [ ] Add URL metadata processing
 - [ ] Add image description capabilities
-- [ ] Include source URLs in article sections
-- [ ] Improve error handling for API responses
+- [ ] reaction fetching is still limited to first 100 reactions. 
+
+### article generation
+- [ ] Add more memories
+- [ ] Add more casts
+- [ ] Include source URLs of casts in article sections
+
 
 ## Technical Details
 
