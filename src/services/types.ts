@@ -83,3 +83,13 @@ export interface Memory {
 export interface EmbeddingFunction {
     generate(texts: string[]): Promise<number[][]>;
 }
+
+// Interface for metadata of chroma object. used to checking for duplicates
+export interface ChromaMetadataType {
+    timestamp: string;
+    author: string;
+    hash: string;
+    type?: string;
+    similarity?: number;
+    similarity_category?: string;
+}
