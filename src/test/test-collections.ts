@@ -1,4 +1,5 @@
 import { client, COLLECTIONS, embedder } from '../database/client';
+// checking if collections exists and peeks at content
 
 async function checkCollections() {
     try {
