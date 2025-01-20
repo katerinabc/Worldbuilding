@@ -1,67 +1,63 @@
 import { Cast, ChromaMetadataType } from './types';  // Our custom types for Farcaster data
-import { client, COLLECTIONS, embedder } from '../database/client';
+import { client, COLLECTIONS, getEmbedder } from '../database/client';
+import { IEmbeddingFunction } from 'chromadb';
 
 export class MemoryService {
     private longTermCollection: any;
     private shortTermCollection: any;
+    private embedder: IEmbeddingFunction | undefined;
 
     // initialize collections
-    async initializeCollections() {
-
+    async initializeCollections(embeddingChoice: 'chroma' | 'gaia' = 'chroma') {
         try {
-            // await client.deleteCollection(this.longTermCollection);
-            // console.log('long term collection deleted')
+            this.embedder = getEmbedder(embeddingChoice) as IEmbeddingFunction;
+            console.log(`Using ${embeddingChoice} embedder`);
+
             this.longTermCollection = await client.getOrCreateCollection({
                 name: COLLECTIONS.LONG_TERM,
-                embeddingFunction: embedder,
-                metadata: {description: "users long term memory"}
+                embeddingFunction: this.embedder,
+                metadata: { description: "users long term memory" }
             });
-            
-            console.log('long term collection created or gotten')
-            
-        } catch (error) { 
-            console.error('failed to create or get collection: ', error);
-            throw error;
-            // // if collection does not exist create it
-            // console.log('creating new long-term collection...');
-            // this.longTermCollection = await client.createCollection({
-            //     name: COLLECTIONS.LONG_TERM,
-            //     embeddingFunction: embedder,
-            //     metadata: {description: "users long term memory"}
-            // });
-        };
-        try {
+            console.log('Long term collection initialized');
+
             this.shortTermCollection = await client.getOrCreateCollection({
                 name: COLLECTIONS.SHORT_TERM,
-                embeddingFunction: embedder,
-                metadata: {description: "users short term memory"}
+                embeddingFunction: this.embedder,
+                metadata: { description: "users short term memory" }
             });
-            console.log('short term collection created or gotten')
-            
+            console.log('Short term collection initialized');
 
-        } catch (error) {
-            console.error('failed to create or get collection: ', error);
+            return {
+                longTermCollection: this.longTermCollection,
+                shortTermCollection: this.shortTermCollection
+            };
+        } catch (error: unknown) {
+            console.error('Failed to initialize collections:', (error as Error).message);
             throw error;
-            // //if collection does not exist create it
-            // console.log('creating new short-term collection...');
-            // this.shortTermCollection = await client.createCollection({
-            //     name: COLLECTIONS.SHORT_TERM,
-            //     embeddingFunction: embedder,
-            //     metadata: {description: "users short term memory"}
-            // });
         }
-            return { 
-                longTermCollection: this.longTermCollection, 
-                shortTermCollection: this.shortTermCollection 
-            }; 
-        } 
+    }
+
+    // Add getter methods to access collections with proper embedder
+    async getLongTermCollection(): Promise< any > {
+        if (!this.longTermCollection) {
+            throw new Error('Long term collection not initialized');
+        }
+        return this.longTermCollection;
+    }
+
+    async getShortTermCollection(): Promise< any > {
+        if (!this.shortTermCollection) {
+            throw new Error('Short term collection not initialized');
+        }
+        return this.shortTermCollection;
+    }
 
     /** Core function to process casts and generate their embeddings */
 
     async processLongTermMemory(casts: Cast[]) {
         try {
             // process in smaller batches
-            const BATCH_SIZE = 20;
+            const BATCH_SIZE = 10;
             for (let i = 0; i < casts.length; i += BATCH_SIZE) {
                 const batch = casts.slice(i, i + BATCH_SIZE);
                 console.log(`Processing batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`);

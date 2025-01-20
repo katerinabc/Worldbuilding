@@ -1,4 +1,9 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// TODO update API call with header info. 
 
 interface ArticleSection { // move this to types and import types
     title: string;
@@ -8,6 +13,7 @@ interface ArticleSection { // move this to types and import types
 
 export class ArticleGenerator {
     private readonly baseUrl: string = 'https://llama8b.gaia.domains/v1';
+    private readonly model: string = 'llama';  // Updated model name
     private readonly longTermCollection: any;
     private readonly shortTermCollection: any;
 
@@ -96,6 +102,47 @@ export class ArticleGenerator {
             .replace('{guidelines}', this.guidelinesBySection[sectionType].join('\n'));
     }
 
+    private async makeAPICall(prompt: string): Promise<string> {
+        try {
+            const response = await axios.post(
+                `${this.baseUrl}/chat/completions`,
+                {messages: [
+                    {
+                        role: "system",
+                        content: "You are crafting a section of a newsletter-style article. Write in a personal, reflective tone."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                model: this.model,
+                temperature: 0.7,
+                top_p: 0.9,
+                presence_penalty: 0.6,  // Encourage new topics
+                frequency_penalty: 0.5  // Reduce repetition
+                },
+                {
+                    headers: {
+                        'accept': 'application/json',
+                        'content-type': 'application/json',
+                        'Authorization': `Bearer ${process.env.GAIA_API_KEY}`
+                    },
+                    timeout: 60000  // 60 second timeout
+                }
+            );
+
+            if (!response.data?.choices?.[0]?.message?.content) {
+                throw new Error('Invalid API response format');
+            }
+
+            return response.data.choices[0].message.content;
+        } catch (error) {
+            console.error('Error making API call:', error);
+            throw error;
+        }
+    }
+
     public async generateCoreSection(): Promise<string> {
         try {
             const coreCasts = await this.shortTermCollection.get({
@@ -115,23 +162,7 @@ export class ArticleGenerator {
             const prompt = this.createSectionPrompt('core', coreCasts.documents);
             const fullPrompt = `${userContext}\n\n${prompt}`;
 
-            const response = await axios.post(`${this.baseUrl}/chat/completions`, {
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are crafting a section of a newsletter-style article. Write in a personal, reflective tone."
-                    },
-                    {
-                        role: "user",
-                        content: fullPrompt
-                    }
-                ],
-                model: "llama",
-                temperature: 0.7,
-                max_tokens: 1000
-            });
-
-            return response.data.choices[0].message.content;
+            return await this.makeAPICall(fullPrompt);
 
         } catch (error) {
             console.error('Error generating core section:', error);
@@ -139,42 +170,22 @@ export class ArticleGenerator {
         }
     }
 
+    // Update generateRelatedSection and generateOuterSpaceSection similarly
     public async generateRelatedSection(): Promise<string> {
         try {
             const relatedCasts = await this.shortTermCollection.get({
-                where: {
-                    'similarity_category': 'related'
-                }
+                where: { 'similarity_category': 'related' }
             });
 
-            if (!relatedCasts || !relatedCasts.documents) {
+            if (!relatedCasts?.documents) {
                 throw new Error('No related casts found');
             }
 
-            // Get user context
             const userContext = await this.getUserContext();
-
-            // Add user context to the prompt
             const prompt = this.createSectionPrompt('related', relatedCasts.documents);
             const fullPrompt = `${userContext}\n\n${prompt}`;
 
-            const response = await axios.post(`${this.baseUrl}/chat/completions`, {
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are crafting a section of a newsletter-style article. Write in a personal, reflective tone."
-                    },
-                    {
-                        role: "user",
-                        content: fullPrompt
-                    }
-                ],
-                model: "llama",
-                temperature: 0.7,
-                max_tokens: 1000
-            });
-
-            return response.data.choices[0].message.content;
+            return await this.makeAPICall(fullPrompt);
 
         } catch (error) {
             console.error('Error generating related section:', error);
@@ -185,39 +196,18 @@ export class ArticleGenerator {
     public async generateOuterSpaceSection(): Promise<string> {
         try {
             const outerSpaceCasts = await this.shortTermCollection.get({
-                where: {
-                    'similarity_category': 'outerSpace'
-                }
+                where: { 'similarity_category': 'outerSpace' }
             });
 
-            if (!outerSpaceCasts || !outerSpaceCasts.documents) {
+            if (!outerSpaceCasts?.documents) {
                 throw new Error('No outer space casts found');
             }
 
-            // Get user context
             const userContext = await this.getUserContext();
-
-            // Add user context to the prompt
             const prompt = this.createSectionPrompt('outerSpace', outerSpaceCasts.documents);
             const fullPrompt = `${userContext}\n\n${prompt}`;
 
-            const response = await axios.post(`${this.baseUrl}/chat/completions`, {
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are crafting a section of a newsletter-style article. Write in a personal, reflective tone."
-                    },
-                    {
-                        role: "user",
-                        content: fullPrompt
-                    }
-                ],
-                model: "llama",
-                temperature: 0.7,
-                max_tokens: 1000
-            });
-
-            return response.data.choices[0].message.content;
+            return await this.makeAPICall(fullPrompt);
 
         } catch (error) {
             console.error('Error generating outer space section:', error);
@@ -232,4 +222,5 @@ export class ArticleGenerator {
 
         return `${coreSection}\n\n${relatedSection}\n\n${outerSpaceSection}`;
     }
+
 }

@@ -1,7 +1,8 @@
 import { EmbeddingVector } from "./types";
-import { client, COLLECTIONS, embedder } from "../database/client";
+import { client, COLLECTIONS, getEmbedder } from "../database/client";
 import { MemoryService } from "./memory";
 import { AnalyticsDB } from "../database/sqlite3";
+import { IEmbeddingFunction } from 'chromadb';
 
 export class SimilarityService {     
      /**
@@ -119,5 +120,10 @@ export class SimilarityService {
             console.error('error updating similarity score:', error);
             throw error;
         }
+    }
+
+    async initialize(embeddingChoice: 'chroma' | 'gaia' = 'chroma') {
+        const embedder = getEmbedder(embeddingChoice);
+        // ... rest of the code
     }
 } 
