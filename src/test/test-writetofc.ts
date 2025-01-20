@@ -1,9 +1,10 @@
 import { WriteToFc } from '../services/writetofc';
-import { client, COLLECTIONS, embedder } from '../database/client';
+import { client, COLLECTIONS, getEmbedder } from '../database/client';
 import { MemoryService } from '../services/memory';
 import { FetchUserCasts } from '../services/feed';
 import { FetchReactions } from '../services/reactions';
 import dotenv from 'dotenv';
+import { IEmbeddingFunction } from 'chromadb';
 
 dotenv.config()
 
@@ -17,6 +18,7 @@ async function testWriteToFc() {
 
         // 2. Initialize collections
         console.log('Creating Chroma collections...');
+        const embedder = getEmbedder('chroma');
         await memoryService.initializeCollections();
 
         // 3. Fetch and process data
@@ -30,12 +32,12 @@ async function testWriteToFc() {
         console.log('Getting populated collections...');
         const shortTermCollection = await client.getCollection({
             name: COLLECTIONS.SHORT_TERM,
-            embeddingFunction: embedder,
+            embeddingFunction: embedder as IEmbeddingFunction,
         });
 
         const longTermCollection = await client.getCollection({
             name: COLLECTIONS.LONG_TERM,
-            embeddingFunction: embedder,
+            embeddingFunction: embedder as IEmbeddingFunction,
         });
 
         // 5. Initialize WriteToFc with populated collections

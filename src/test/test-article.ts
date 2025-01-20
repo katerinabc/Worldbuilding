@@ -1,22 +1,23 @@
-import { client, COLLECTIONS, embedder } from "../database/client";
+import { client, COLLECTIONS, getEmbedder } from "../database/client";
 import { ArticleGenerator } from "../services/article";
+import { IEmbeddingFunction } from 'chromadb';
 
 async function testArticleGenerator() {
     try {
-        // 1. Initialize services
+        const embedder = getEmbedder('chroma');
         console.log('Initializing services...');
         
         console.log('Getting short-term collection...');
         const shortTermCollection = await client.getCollection({
             name: COLLECTIONS.SHORT_TERM,
-            embeddingFunction: embedder,
+            embeddingFunction: embedder as IEmbeddingFunction,
         });
 
         console.log('getting long-term collection...');
         const longTermCollection = await client.getCollection({
             name: COLLECTIONS.LONG_TERM,
-            embeddingFunction: embedder,
-        })
+            embeddingFunction: embedder as IEmbeddingFunction,
+        });
 
         // Check if we have data
         const shortTermCount = await shortTermCollection.count();

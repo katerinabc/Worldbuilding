@@ -1,8 +1,11 @@
-import { client, COLLECTIONS, embedder } from '../database/client';
-// checking if collections exists and peeks at content
+import { client, COLLECTIONS, getEmbedder } from '../database/client';
+import { IEmbeddingFunction } from 'chromadb';
 
-async function checkCollections() {
+async function checkCollections(embeddingChoice: 'chroma' | 'gaia' = 'chroma') {
     try {
+        const embedder = getEmbedder(embeddingChoice);
+        console.log(`Using ${embeddingChoice} embedder`);
+
         // List all collections
         console.log('Listing all collections...');
         const allCollections = await client.listCollections();
@@ -13,14 +16,15 @@ async function checkCollections() {
         try {
             const shortTerm = await client.getCollection({
                 name: COLLECTIONS.SHORT_TERM,
-                embeddingFunction: embedder,
+                embeddingFunction: embedder as IEmbeddingFunction,
             });
             const shortTermCount = await shortTerm.count();
             console.log(`✓ Short-term collection exists with ${shortTermCount} items`);
             
-            // Peek at content
-            const shortTermPeek = await shortTerm.peek({limit: 1});
-            console.log('Sample content:', shortTermPeek);
+            if (shortTermCount > 0) {
+                const shortTermPeek = await shortTerm.peek({limit: 1});
+                console.log('Sample content:', shortTermPeek);
+            }
         } catch (e) {
             console.log('✗ Short-term collection not found');
         }
@@ -29,14 +33,15 @@ async function checkCollections() {
         try {
             const longTerm = await client.getCollection({
                 name: COLLECTIONS.LONG_TERM,
-                embeddingFunction: embedder,
+                embeddingFunction: embedder as IEmbeddingFunction,
             });
             const longTermCount = await longTerm.count();
             console.log(`✓ Long-term collection exists with ${longTermCount} items`);
             
-            // Peek at content
-            const longTermPeek = await longTerm.peek({limit: 1});
-            console.log('Sample content:', longTermPeek);
+            if (longTermCount > 0) {
+                const longTermPeek = await longTerm.peek({limit: 1});
+                console.log('Sample content:', longTermPeek);
+            }
         } catch (e) {
             console.log('✗ Long-term collection not found');
         }
@@ -46,4 +51,6 @@ async function checkCollections() {
     }
 }
 
-checkCollections(); 
+// Get embedder choice from command line or default to 'chroma'
+const embedderChoice = process.argv[2] as 'chroma' | 'gaia' || 'chroma';
+checkCollections(embedderChoice); 

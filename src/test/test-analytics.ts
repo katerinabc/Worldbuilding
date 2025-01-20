@@ -1,20 +1,25 @@
 import { SimilarityService } from '../services/analytics';
-import { client, COLLECTIONS, embedder } from "../database/client";
+import { client, COLLECTIONS, getEmbedder } from "../database/client";
 import { AnalyticsDB } from '../database/sqlite3';
+import { IEmbeddingFunction } from 'chromadb';
 
-async function testAnalytics() {
+async function testAnalytics(embeddingChoice: 'chroma' | 'gaia' = 'chroma') {
+
+    const embedder = getEmbedder(embeddingChoice);
+    console.log(`Using ${embeddingChoice} embedder`);
+
     try {
         // 1. initalize services
         console.log('initialize services...');
         console.log('getting long-term collection...');
         const longTermCollection = await client.getCollection({
             name: COLLECTIONS.LONG_TERM,
-            embeddingFunction: embedder,
+            embeddingFunction:  embedder as IEmbeddingFunction,  // Type assertion here
         });
         console.log('getting short-term collection...');
         const shortTermCollection = await client.getCollection({
             name: COLLECTIONS.SHORT_TERM,
-            embeddingFunction: embedder,
+            embeddingFunction:  embedder as IEmbeddingFunction,  // Type assertion here
         });
         console.log('getting analyticsDB...');
          const analyticsDB = new AnalyticsDB();

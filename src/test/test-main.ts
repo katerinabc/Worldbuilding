@@ -8,7 +8,8 @@ import fs from 'fs/promises'
 import path from 'path'
 import { AnalyticsDB } from '../database/sqlite3'
 import { SimilarityService } from '../services/analytics'
-import { client, COLLECTIONS, embedder } from '../database/client'
+import { client, COLLECTIONS, getEmbedder } from '../database/client'
+import { IEmbeddingFunction } from 'chromadb'
 
 dotenv.config()
 
@@ -70,13 +71,14 @@ async function testMemoryProcessing(casts: any[]) {
         console.log('✅ Successfully processed memories')
 
         // Get collections for next steps
+        const embedder = getEmbedder('chroma')
         const longTermCollection = await client.getCollection({
             name: COLLECTIONS.LONG_TERM,
-            embeddingFunction: embedder,
+            embeddingFunction: embedder as IEmbeddingFunction,
         })
         const shortTermCollection = await client.getCollection({
             name: COLLECTIONS.SHORT_TERM,
-            embeddingFunction: embedder,
+            embeddingFunction: embedder as IEmbeddingFunction,
         })
         return { longTermCollection, shortTermCollection }
     } catch (error) {
