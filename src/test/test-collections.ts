@@ -1,10 +1,11 @@
 import { client, COLLECTIONS, getEmbedder } from '../database/client';
 import { IEmbeddingFunction } from 'chromadb';
+import { EMBEDDER_CONFIG } from '../config/embedder';
 
-async function checkCollections(embeddingChoice: 'chroma' | 'gaia' = 'chroma') {
+async function checkCollections() {
     try {
-        const embedder = getEmbedder(embeddingChoice);
-        console.log(`Using ${embeddingChoice} embedder`);
+        const embedder = getEmbedder();
+        console.log(`Using ${EMBEDDER_CONFIG.active} embedder`);
 
         // List all collections
         console.log('Listing all collections...');
@@ -52,5 +53,5 @@ async function checkCollections(embeddingChoice: 'chroma' | 'gaia' = 'chroma') {
 }
 
 // Get embedder choice from command line or default to 'chroma'
-const embedderChoice = process.argv[2] as 'chroma' | 'gaia' || 'chroma';
-checkCollections(embedderChoice); 
+// const embedderChoice = process.argv[2] as 'chroma' | 'gaia' || 'chroma';
+checkCollections(); 

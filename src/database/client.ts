@@ -1,23 +1,25 @@
 import { ChromaClient } from 'chromadb';
 import { GaiaEmbeddingFunction } from './chromadb';
 import { EmbeddingFunction } from '../services/types';
+import { EMBEDDER_CONFIG } from '../config/embedder';
 
 // Create shared client and embedder
 export const client = new ChromaClient();
 // export const embedder = new GaiaEmbeddingFunction();
-export const getEmbedder = (service: 'chroma' | 'gaia' = 'chroma'): EmbeddingFunction | undefined => {
-    switch (service.toLowerCase()) {
+export const getEmbedder = (): EmbeddingFunction | undefined => {
+    const choice = EMBEDDER_CONFIG.active;
+    
+    switch (choice) {
         case 'gaia': 
-            console.log('using gaia embedding service');
+            console.log('Using Gaia embedding service');
             return new GaiaEmbeddingFunction();
         case 'chroma':
-            console.log('using chroma default embedding service');
-            return undefined //chromadb will be the default
+            console.log('Using ChromaDB default embedding');
+            return undefined;
         default:
-            console.log('invalid embedding service specified. using default chroma embedding service');
+            console.log('Invalid embedding service, using ChromaDB default');
             return undefined;
     }
-
 }
 
 // Collection names as constants

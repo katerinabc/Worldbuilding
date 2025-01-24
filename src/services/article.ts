@@ -1,19 +1,15 @@
 import axios from 'axios';
+// import { ArticleSection } from './types';
 import dotenv from 'dotenv';
+import { EMBEDDER_CONFIG } from '../config/embedder';
+
+// this calls the chat endpoint from gaia
 
 dotenv.config();
 
-// TODO update API call with header info. 
-
-interface ArticleSection { // move this to types and import types
-    title: string;
-    content: string[];
-    similarity: 'core' | 'related' | 'outerSpace';
-}
-
 export class ArticleGenerator {
-    private readonly baseUrl: string = 'https://llama8b.gaia.domains/v1';
-    private readonly model: string = 'llama';  // Updated model name
+    private readonly baseUrl: string;
+    private readonly model: string;
     private readonly longTermCollection: any;
     private readonly shortTermCollection: any;
 
@@ -22,42 +18,39 @@ export class ArticleGenerator {
     Write a blog-style article in the first person singular that analyzes and connects these {section_type} topics:
     {casts}
 
-    Guidelines:
-    1. Start with a personalized introduction. Use your knowledge of the user.
-    2. For Core Interests, dive deep into the main themes. Use content from the users digital twin to enhance this section
-    3. For Related Topics, show how they connect to the core interests
-    4. For Outer Space, no need to find creative ways to connect these seemingly unrelated topics. Add one sentence why they are an outer-space topic. 
+    Guidelines: 
+    1. be consice. 
+    2. don't add emojis
+    3. don't add any formatting or headings
+    4. don't worry about being PC. it's ok to say things that are in line with the user
     5. End with asking the reader to collect this article. This should be the last sentence in the article. nothing comes after it.
+    6. each section should be not more than 1000 characters. 
 
     Write the article as if you are the narrator of the user's life. Imagine you live in the users head and are sorting through the casts, filing them in different sections based on their content.
     for every cast that you file in a section you make a commment why it belongs in this section. 
     Make the article sound like a monologue. 
 
     Remember that these casts are written by other people than the user. The user only liked or recasted them.
-
-    Do not worry about clear formatting and engaging headings.
-    Do not use any emojis.
-    The article should be more than 500 words andless than 3000 words. 
     `;
 
     // Define guidelines for each section type
     private readonly guidelinesBySection = {
         core: [
-            "1. Dive deep into the main themes",
+            "1. dive deep into the main themes. Use content from the users digital twin to enhance this section",
             "2. Show how these topics connect to each other",
             "3. Write as if you are the narrator of the user's life",
             "4. For each cast, explain why it's a core interest",
             "5. Make it sound like a monologue"
         ],
         related: [
-            "1. Show how these topics connect to the core interests",
+            "1. Show how these topics connect to the core interests. ",
             "2. Explain why these topics are relevant but not core",
             "3. Keep the narrative flow from the core section",
             "4. Make connections between different related topics",
             "5. Maintain the monologue style"
         ],
         outerSpace: [
-            "1. Acknowledge these topics are different from usual interests",
+            "1. no need to find creative ways to connect these seemingly unrelated topics.",
             "2. No need to force connections to other topics",
             "3. Explain what makes each topic intriguing",
             "4. Keep a curious, exploratory tone",
@@ -66,6 +59,9 @@ export class ArticleGenerator {
     }
 
     constructor(shortTermCollection: any, longTermCollection: any) {
+        const settings = EMBEDDER_CONFIG.settings.gaia;
+        this.baseUrl = settings.baseUrl;
+        this.model = 'llama2-7b-chat';  // Different model for chat
         this.shortTermCollection = shortTermCollection;
         this.longTermCollection = longTermCollection;
     }

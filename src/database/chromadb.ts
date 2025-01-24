@@ -1,15 +1,20 @@
 import axios from 'axios';
 import { EmbeddingFunction } from '../services/types';
+import { EMBEDDER_CONFIG } from '../config/embedder';
 
 export class GaiaEmbeddingFunction implements EmbeddingFunction {
-    private readonly baseUrl: string = 'https://llama8b.gaia.domains/v1';
-    // private readonly model: string = 'nomic-embed-text-v1.5.f16';
-    private readonly model: string = 'nomic-embed';
-    private readonly maxBatchSize: number = 1;  // Reduce batch size
-    private readonly timeout: number = 30000;    // 30 second timeout
+    private readonly baseUrl: string;
+    private readonly model: string;
+    private readonly maxBatchSize: number;
+    private readonly timeout: number;
 
     constructor() {
-        // No need for constructor parameters since Gaia node is public
+        // Get settings directly from config
+        const settings = EMBEDDER_CONFIG.settings.gaia;
+        this.baseUrl = settings.baseUrl;
+        this.model = settings.model;
+        this.maxBatchSize = settings.maxBatchSize;
+        this.timeout = settings.timeout;
     }
 
     async generate(texts: string[]): Promise<number[][]> {

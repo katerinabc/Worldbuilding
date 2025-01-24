@@ -9,8 +9,14 @@ export interface Author {
     following_count: number;
 }
 
+interface ArticleSection { // never used
+    title: string;
+    content: string[];
+    similarity: 'core' | 'related' | 'outerSpace';
+}
+
 export interface Cast {
-    object: 'cast';
+    object: 'cast';a
     hash: string;
     author: Author;
     text: string;

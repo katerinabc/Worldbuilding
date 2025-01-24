@@ -8,7 +8,7 @@ export class AnalyticsDB {
         this.initializeDB();
     }
 
-    private initializeDB() {
+    public initializeDB() {
         // Create the analytics table
         const createTable = `
             CREATE TABLE IF NOT EXISTS cast_analytics (
@@ -24,7 +24,7 @@ export class AnalyticsDB {
         this.db.exec(createTable);
     }
 
-    addAnalysis(data: {
+    async addAnalysis(data: {
         hash: string;
         similarity_score: number;
         similarity_category: string;

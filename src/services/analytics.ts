@@ -2,7 +2,8 @@ import { EmbeddingVector } from "./types";
 import { client, COLLECTIONS, getEmbedder } from "../database/client";
 import { MemoryService } from "./memory";
 import { AnalyticsDB } from "../database/sqlite3";
-import { IEmbeddingFunction } from 'chromadb';
+import { EMBEDDER_CONFIG } from '../config/embedder';
+import { EmbeddingFunction } from './types';
 
 export class SimilarityService {     
      /**
@@ -14,6 +15,7 @@ export class SimilarityService {
 //      */
 
     // configuration files that don't change
+    private readonly embedder: EmbeddingFunction | undefined;
     private longTermCollection: any;
     private shortTermCollection: any;
     private analyticsDB: AnalyticsDB;
@@ -29,6 +31,8 @@ export class SimilarityService {
         this.longTermCollection = longTermCollection;
         this.shortTermCollection = shortTermCollection;
         this.analyticsDB = analyticsDB;
+        this.embedder = getEmbedder();  // Initialize embedder in constructor
+        const settings = EMBEDDER_CONFIG.settings.gaia;
     }
 
     /**
@@ -48,11 +52,15 @@ export class SimilarityService {
     async updateSimilarityScore(): Promise<void> {
         try {
             //get all items from both collections
+            // remember to mention the embedder
             const shortTermItems = await this.shortTermCollection.get({
-                include: ["embeddings", "metadatas", "documents"]
+                include: ["embeddings", "metadatas", "documents"],
+                embedding_function: this.embedder
             });
             const longTermItems = await this.longTermCollection.get({
-                include: ["embeddings", "metadatas", "documents"]
+                include: ["embeddings", "metadatas", "documents"],
+                embedding_function: this.embedder
+                
             });
 
             // add debug logging
@@ -72,6 +80,7 @@ export class SimilarityService {
                 // console.log('print likeEmbedding:', likeEmbedding);
 
                 // find the higest similarity score among feed items
+                // this refers to the SimilarityService instance
                 let maxSimilarity = 0;
                 for (let j = 0; j < longTermItems.embeddings.length; j++) {
                     const feedEmbedding = longTermItems.embeddings[j];
@@ -120,10 +129,5 @@ export class SimilarityService {
             console.error('error updating similarity score:', error);
             throw error;
         }
-    }
-
-    async initialize(embeddingChoice: 'chroma' | 'gaia' = 'chroma') {
-        const embedder = getEmbedder(embeddingChoice);
-        // ... rest of the code
     }
 } 

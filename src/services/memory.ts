@@ -1,38 +1,42 @@
 import { Cast, ChromaMetadataType } from './types';  // Our custom types for Farcaster data
 import { client, COLLECTIONS, getEmbedder } from '../database/client';
+import { EMBEDDER_CONFIG } from '../config/embedder';
 import { IEmbeddingFunction } from 'chromadb';
 
 export class MemoryService {
     private longTermCollection: any;
     private shortTermCollection: any;
-    private embedder: IEmbeddingFunction | undefined;
+    private readonly embedder: IEmbeddingFunction | undefined;
+
+    constructor() {
+        // Initialize embedder from config when service is created
+        this.embedder = getEmbedder();
+        console.log(`memory.ts: Using ${EMBEDDER_CONFIG.active} embedder`);
+    }
 
     // initialize collections
-    async initializeCollections(embeddingChoice: 'chroma' | 'gaia' = 'chroma') {
+    async initializeCollections() {
         try {
-            this.embedder = getEmbedder(embeddingChoice) as IEmbeddingFunction;
-            console.log(`Using ${embeddingChoice} embedder`);
-
             this.longTermCollection = await client.getOrCreateCollection({
                 name: COLLECTIONS.LONG_TERM,
                 embeddingFunction: this.embedder,
                 metadata: { description: "users long term memory" }
             });
-            console.log('Long term collection initialized');
+            console.log('memory.ts: Long term collection initialized');
 
             this.shortTermCollection = await client.getOrCreateCollection({
                 name: COLLECTIONS.SHORT_TERM,
                 embeddingFunction: this.embedder,
                 metadata: { description: "users short term memory" }
             });
-            console.log('Short term collection initialized');
+            console.log('memory.ts: Short term collection initialized');
 
             return {
                 longTermCollection: this.longTermCollection,
                 shortTermCollection: this.shortTermCollection
             };
         } catch (error: unknown) {
-            console.error('Failed to initialize collections:', (error as Error).message);
+            console.error('memory.ts: Failed to initialize collections:', (error as Error).message);
             throw error;
         }
     }
@@ -40,14 +44,14 @@ export class MemoryService {
     // Add getter methods to access collections with proper embedder
     async getLongTermCollection(): Promise< any > {
         if (!this.longTermCollection) {
-            throw new Error('Long term collection not initialized');
+            throw new Error('memory.ts: Long term collection not initialized');
         }
         return this.longTermCollection;
     }
 
     async getShortTermCollection(): Promise< any > {
         if (!this.shortTermCollection) {
-            throw new Error('Short term collection not initialized');
+            throw new Error('memory.ts: Short term collection not initialized');
         }
         return this.shortTermCollection;
     }
@@ -60,7 +64,7 @@ export class MemoryService {
             const BATCH_SIZE = 10;
             for (let i = 0; i < casts.length; i += BATCH_SIZE) {
                 const batch = casts.slice(i, i + BATCH_SIZE);
-                console.log(`Processing batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`);
+                console.log(`memory.ts: Processing LT batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`);
             
                 await this.longTermCollection.add({
                     ids: batch.map(cast => cast.hash), 
@@ -73,27 +77,25 @@ export class MemoryService {
                 }))
                 // documents: casts.map(cast => cast.text),
             });
-            console.log('processing long term memory...')
+            console.log('memory.ts: processing long term memory...')
 
             //add a delay between batches
             await new Promise(resolve => setTimeout(resolve, 1000));
             } 
             return this.longTermCollection;
         } catch (error) {
-                console.error('failed processing long term memory:', error);
+                console.error('memory.ts: failed processing long term memory:', error);
                 throw error;
             }
         }
 
-    async processShortTermMemory(casts: Cast[]): Promise<void> {
-        try { 
-            // process in smaller batches
-            const BATCH_SIZE = 1;
+    async processShortTermMemory(casts: Cast[]) {
+        try {
+            const BATCH_SIZE = 10;
             for (let i = 0; i < casts.length; i += BATCH_SIZE) {
                 const batch = casts.slice(i, i + BATCH_SIZE);
-                console.log('number of casts: ', casts.length)
-                console.log(`Processing batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`)
-
+                console.log(`memory.ts: Processing ST batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`);
+                
                 // check for duplicates
                 const duplicateCheck = await this.shortTermCollection.get({
                     ids: batch.map(cast => cast.hash),
@@ -136,8 +138,7 @@ export class MemoryService {
             // delay
             await new Promise(resolve => setTimeout(resolve, 1000));
                 }
-        return this.shortTermCollection;
-
+                return this.shortTermCollection;
             
         } catch (error) {
             console.error('failed processing short term memory:', error);

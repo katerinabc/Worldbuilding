@@ -10,6 +10,7 @@ import { AnalyticsDB } from '../database/sqlite3'
 import { SimilarityService } from '../services/analytics'
 import { client, COLLECTIONS, getEmbedder } from '../database/client'
 import { IEmbeddingFunction } from 'chromadb'
+import { EMBEDDER_CONFIG } from '../config/embedder'
 
 dotenv.config()
 
@@ -46,7 +47,7 @@ async function testFetchReactions() {
 async function testMemoryProcessing(casts: any[]) {
     console.log('\nTesting: Memory Processing')
     try {
-        // Initialize MemoryService and collections first
+        // Initialize MemoryService and collections
         const memoryService = new MemoryService()
         console.log('Initializing collections...')
         await memoryService.initializeCollections()
@@ -71,7 +72,7 @@ async function testMemoryProcessing(casts: any[]) {
         console.log('✅ Successfully processed memories')
 
         // Get collections for next steps
-        const embedder = getEmbedder('chroma')
+        const embedder = getEmbedder()
         const longTermCollection = await client.getCollection({
             name: COLLECTIONS.LONG_TERM,
             embeddingFunction: embedder as IEmbeddingFunction,
