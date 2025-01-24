@@ -20,11 +20,12 @@ export class ArticleGenerator {
 
     Guidelines: 
     1. be consice. 
+    2. don't start wtih an introduction. just start with the article.
     2. don't add emojis
     3. don't add any formatting or headings
     4. don't worry about being PC. it's ok to say things that are in line with the user
     5. End with asking the reader to collect this article. This should be the last sentence in the article. nothing comes after it.
-    6. each section should be not more than 1000 characters. 
+    6. each section should be not more than 1000 bytes. 
 
     Write the article as if you are the narrator of the user's life. Imagine you live in the users head and are sorting through the casts, filing them in different sections based on their content.
     for every cast that you file in a section you make a commment why it belongs in this section. 
@@ -40,21 +41,24 @@ export class ArticleGenerator {
             "2. Show how these topics connect to each other",
             "3. Write as if you are the narrator of the user's life",
             "4. For each cast, explain why it's a core interest",
-            "5. Make it sound like a monologue"
+            "5. Make it sound like a monologue",
+            "6. not more than 1000 bytes. "
         ],
         related: [
             "1. Show how these topics connect to the core interests. ",
             "2. Explain why these topics are relevant but not core",
             "3. Keep the narrative flow from the core section",
             "4. Make connections between different related topics",
-            "5. Maintain the monologue style"
+            "5. Maintain the monologue style",
+            "6. not more than 1000 bytes. "
         ],
         outerSpace: [
             "1. no need to find creative ways to connect these seemingly unrelated topics.",
             "2. No need to force connections to other topics",
             "3. Explain what makes each topic intriguing",
             "4. Keep a curious, exploratory tone",
-            "5. Stay in the monologue style"
+            "5. Stay in the monologue style",
+            "6. not more than 1000 bytes. "
         ]
     }
 
