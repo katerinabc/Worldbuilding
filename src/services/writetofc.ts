@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { getLatestArticlePath } from './getlatestarticle'
 import { ArticleGenerator } from './article'
-import { truncateToBytes } from '../utils/casting'
+import { truncateToBytes, processLLMOutput } from '../utils/casting'
 import dotenv from 'dotenv';
 import fs from 'fs'
 
@@ -184,18 +184,9 @@ export class WriteToFc {
             const articleGenerator = new ArticleGenerator(this.shortTermCollection, this.longTermCollection)
             const coreSection = await articleGenerator.generateCoreSection()
             
-            const defaultCoreIntro = 'Likes and Recasts core to @kbc existing thoughts. '
+            const defaultCoreIntro = 'Core to @kbc: '
 
-            // remove all at-mentions. this is annoygin while I'm testing
-
-            const processedCoreSection = defaultCoreIntro + coreSection
-
-            // check if the core section is more than 1000 bytes
-            if (processedCoreSection.length > 1000) {
-                const truncatedCoreSection = truncateToBytes(processedCoreSection, 1000)
-                console.log('truncated core section', truncatedCoreSection)
-                return truncatedCoreSection 
-            }
+            const processedCoreSection = processLLMOutput(coreSection, defaultCoreIntro)
 
             console.log('processed the core section', processedCoreSection)
 
@@ -212,19 +203,8 @@ export class WriteToFc {
             const articleGenerator = new ArticleGenerator(this.shortTermCollection, this.longTermCollection)
             const relatedSection = await articleGenerator.generateRelatedSection()
 
-            const defaultRelatedIntro = 'Likes and Recasts related to @kbc existing thoughts'
-            
-            // remove all at-mentions. this is annoygin while I'm testing
-            
-            const processedRelatedSection = defaultRelatedIntro + relatedSection
-            console.log('processed the related section', processedRelatedSection)
-
-            // check if the related section is more than 1000 bytes
-            if (processedRelatedSection.length > 1000) {
-                const truncatedRelatedSection = truncateToBytes(processedRelatedSection, 1000)
-                console.log('truncated related section', truncatedRelatedSection)
-                return truncatedRelatedSection
-            }
+            const defaultRelatedIntro = 'Related to @kbc: '
+            const processedRelatedSection = processLLMOutput(relatedSection, defaultRelatedIntro)
 
             return processedRelatedSection
 
@@ -240,20 +220,9 @@ export class WriteToFc {
             const articleGenerator = new ArticleGenerator(this.shortTermCollection, this.longTermCollection)
             const outerSpaceSection = await articleGenerator.generateOuterSpaceSection()
 
-            const defaultOuterSpaceIntro = 'Likes and Recasts from @kbc outer space thoughts. '
+            const defaultOuterSpaceIntro = 'Outer Space to @kbc: '
 
-            // remove all at-mentions. this is annoygin while I'm testing
-
-            
-            const processedOuterSpaceSection = defaultOuterSpaceIntro + outerSpaceSection
-            console.log('processed the outer space section', processedOuterSpaceSection)
-
-            // check if the outer space section is more than 1000 bytes
-            if (processedOuterSpaceSection.length > 1000) {
-                const truncatedOuterSpaceSection = truncateToBytes(processedOuterSpaceSection, 1000)
-                console.log('truncated outer space section', truncatedOuterSpaceSection)
-                return truncatedOuterSpaceSection
-            }
+            const processedOuterSpaceSection = processLLMOutput(outerSpaceSection, defaultOuterSpaceIntro)
 
             return processedOuterSpaceSection
 
