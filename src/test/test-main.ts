@@ -3,6 +3,7 @@ import { FetchReactions } from '../services/reactions'
 import { MemoryService } from '../services/memory'
 import { ArticleGenerator } from '../services/article'
 import { registerArticle } from '../services/register'
+import { WriteToFc } from '../services/writetofc'
 import dotenv from 'dotenv'
 import fs from 'fs/promises'
 import path from 'path'
@@ -19,7 +20,6 @@ async function testFetchUserCasts() {
     try {
         const feedService = new FetchUserCasts()
         const allCasts = await feedService.getUserCasts()
-        // Limit to 15 casts
         const casts = allCasts.slice(0, 15)
         console.log(`✅ Successfully fetched ${casts.length}/15 casts for long-term memory`)
         return casts
@@ -34,7 +34,6 @@ async function testFetchReactions() {
     try {
         const reactionsService = new FetchReactions()
         const allReactions = await reactionsService.getLikedCasts()
-        // Limit to 5 reactions
         const reactions = allReactions.slice(0, 5)
         console.log(`✅ Successfully fetched ${reactions.length}/5 reactions for short-term memory`)
         return reactions
@@ -142,8 +141,24 @@ async function testArticleRegistration(title: string) {
     }
 }
 
+async function testWriteToFc(shortTermCollection: any, longTermCollection: any) {
+    console.log('\nTesting: Memory Processing')
+
+    try {
+        const writeToFc = new WriteToFc(shortTermCollection, longTermCollection)
+        await writeToFc.writeSectionToFc()
+        console.log('✅ Successfully wrote to Farcaster')
+
+    } catch (error) {
+        console.error('❌ Failed to write to Farcaster:', error)
+        throw error
+    }
+    
+}
+
+
 async function runTests() {
-    const title = process.argv[2]
+    const title = process.argv[2] || `daily update ${new Date().toISOString()}`
     
     if (!title) {
         console.error('Please provide a title: npm run test:main "Your Article Title"')
@@ -151,12 +166,26 @@ async function runTests() {
     }
 
     try {
+        console.log('\n=== Testing Complete Flow ===');
+
+        console.log('\n1. Fetching Data...');   
         const casts = await testFetchUserCasts()
         await testFetchReactions()
+
+        console.log('\n2. Processing Memories...');
         const collections = await testMemoryProcessing(casts)
+        
+        console.log('\n3. Calculating Similarity...');
         await testSimilarityService(collections.longTermCollection, collections.shortTermCollection)
+        
+        console.log('\n4. Generating Article...');
         const article = await testArticleGeneration(collections.longTermCollection, collections.shortTermCollection)
+        
+        console.log('\n5. Registering Article...');
         await testArticleRegistration(title)
+        
+        console.log('\n6. Writing to Farcaster...');
+        await testWriteToFc(collections.shortTermCollection, collections.longTermCollection)
         
         console.log('\n✅ All tests completed successfully!')
     } catch (error) {
@@ -164,5 +193,6 @@ async function runTests() {
         process.exit(1)
     }
 }
+
 
 runTests() 

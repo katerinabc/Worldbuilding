@@ -6,26 +6,30 @@ import { SimilarityService } from './services/analytics'
 import { AnalyticsDB } from './database/sqlite3'
 import { getLatestArticlePath } from './services/getlatestarticle'
 import { registerArticle } from './services/register'
-
+import { WriteToFc } from './services/writetofc'
 import dotenv from 'dotenv'
 dotenv.config()
 
 async function main() {
     // Get title from command line arguments
-    const userid = process.argv[2]
-    const title = process.argv[3]
+    const userid = process.argv[2] || '12021' // default userid
+    const title = process.argv[3] || `daily update ${new Date().toISOString()}`
     
-    if (!userid || !title) {
-        console.error('Please provide a userid and title: npm run register "Your Article Title"')
-        process.exit(1)
-    }
+    // if (!userid || !title) {
+    //     console.error('Please provide a userid and title: npm run register "Your Article Title"')
+    //     process.exit(1)
+    // }
 
     try {
         // Step 1a: Fetch user's feed for long-term memory
+        // currently hardcoded to userid 12021
+        // currently limited to 500 casts
         const feedService = new FetchUserCasts(userid)
         const casts = await feedService.getUserCasts()
 
         // Step 1b: Fetch user's reactions for short-term memory
+        // currently hardcoded to userid 12021
+        // currently limited to 500 casts
         const reactionsService = new FetchReactions(userid)
         const reactions = await reactionsService.getLikedCasts()
 
@@ -59,6 +63,12 @@ async function main() {
         console.log('Registration successful!')
         console.log(`View your IP Asset at: https://explorer.story.foundation/ipa/${response.ipId}`)
         console.log(`Article path: ${articlePath}`)
+
+        // Step 6: Write to Farcaster
+        const writeToFc = new WriteToFc(shortTermCollection, longTermCollection)
+        await writeToFc.writeArticleToFc()
+
+        console.log('Article posted to Farcaster!')
 
     } catch (error) {
         if (error instanceof Error) {
