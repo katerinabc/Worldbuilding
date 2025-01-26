@@ -2,6 +2,7 @@ import { Cast, ChromaMetadataType } from './types';  // Our custom types for Far
 import { client, COLLECTIONS, getEmbedder } from '../database/client';
 import { EMBEDDER_CONFIG } from '../config/embedder';
 import { IEmbeddingFunction } from 'chromadb';
+import axios from 'axios';
 
 export class MemoryService {
     private longTermCollection: any;
@@ -62,26 +63,47 @@ export class MemoryService {
         try {
             // process in smaller batches
             const BATCH_SIZE = 10;
+            const skippedCasts: Cast[] = []
+
             for (let i = 0; i < casts.length; i += BATCH_SIZE) {
                 const batch = casts.slice(i, i + BATCH_SIZE);
                 console.log(`memory.ts: Processing LT batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`);
             
-                await this.longTermCollection.add({
-                    ids: batch.map(cast => cast.hash), 
-                    documents: batch.map(cast => cast.text),
-                    metadatas: batch.map(cast => ({
-                        timestamp: cast.timestamp,
-                        author: cast.author.username,
-                        hash: cast.hash,
-                        // type: 'feed'
-                }))
-                // documents: casts.map(cast => cast.text),
-            });
-            console.log('memory.ts: processing long term memory...')
+                try {
+                    await this.longTermCollection.add({
+                        ids: batch.map(cast => cast.hash), 
+                        documents: batch.map(cast => cast.text),
+                        metadatas: batch.map(cast => ({
+                            timestamp: cast.timestamp,
+                            author: cast.author.username,
+                            hash: cast.hash,
+                            // type: 'feed'
+                    }))
+                    // documents: casts.map(cast => cast.text),
 
-            //add a delay between batches
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            } 
+                });
+
+            } catch (error) {
+                if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
+                    console.log(`Timeout processsing batch starting with cast ${batch[0].hash}, skipping ...`);
+                    skippedCasts.push(...batch);
+                    continue;
+                }
+                throw error; // rethro other errors
+
+                }
+
+                // add delay between batches
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            if (skippedCasts.length > 0) {
+                console.log(`memory.ts: skipped ${skippedCasts.length} casts due to timeouts:`,
+                    skippedCasts.map(cast => cast.hash).join(', ')
+                );
+            }
+            console.log('memory.ts: processing long term memory...')
+ 
             return this.longTermCollection;
         } catch (error) {
                 console.error('memory.ts: failed processing long term memory:', error);
@@ -92,6 +114,7 @@ export class MemoryService {
     async processShortTermMemory(casts: Cast[]) {
         try {
             const BATCH_SIZE = 10;
+            // const skippedCasts: Cast[] = []
             for (let i = 0; i < casts.length; i += BATCH_SIZE) {
                 const batch = casts.slice(i, i + BATCH_SIZE);
                 console.log(`memory.ts: Processing ST batch ${i/BATCH_SIZE + 1} of ${Math.ceil(casts.length/BATCH_SIZE)}`);
