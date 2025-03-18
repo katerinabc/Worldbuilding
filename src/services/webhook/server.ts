@@ -36,6 +36,12 @@ app.use((req: Request, res: Response, next: Function) => {
 // Middleware to parse incoming JSON requests
 app.use(bodyParser.json());
 
+// Basic route handler for testing
+app.get('/', (req: Request, res: Response) => {
+    console.log('DEBUG: Root path accessed');
+    res.send('Webhook server is running');
+});
+
 // I'm listening to post requests. that's why it's app.post
 app.post('/webhook', async (req: Request, res: Response) => {
     try {
