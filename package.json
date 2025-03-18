@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "main.ts",
+  "engines": {
+    "node": "22.x"
+  },
   "populate_db": "ts-node src/populate_db.ts",
   "scripts": {
     "test:fetch": "ts-node src/test/test-fetch.ts",
@@ -11,8 +14,12 @@
     "test:collections": "ts-node src/test/test-collections.ts",
     "test:analytics": "ts-node src/test/test-analytics.ts",
     "test:generatearticle": "ts-node src/test/test-article.ts",
+    "test:register": "ts-node src/test/test-register.ts",
     "test:writetofc": "ts-node src/test/test-writetofc.ts",
     "test:main": "ts-node src/test/test-main.ts",
+    "run:server": "npx ts-node src/services/webhook/server.ts",
+    "test:c_webhook": "ts-node src/test/test-createwh.ts",
+    "test:l_webhook": "ts-node src/test/test-listenwh.ts",
     "populate_db": "ts-node src/populate_db.ts",
     "start": "ts-node src/main.ts"
   },
@@ -23,12 +30,14 @@
     "@neynar/nodejs-sdk": "^1.69.1",
     "@pinata/sdk": "^2.1.0",
     "@story-protocol/core-sdk": "^1.2.0-rc.3",
+    "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
     "axios": "^1.7.9",
     "better-sqlite3": "^11.7.0",
     "chromadb": "^1.9.4",
     "chromadb-default-embed": "^2.13.2",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "node-cron": "^3.0.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",

@@ -16,7 +16,7 @@ interface ArticleSection { // never used
 }
 
 export interface Cast {
-    object: 'cast';a
+    object: 'cast';
     hash: string;
     author: Author;
     text: string;

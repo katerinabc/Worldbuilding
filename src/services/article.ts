@@ -64,8 +64,9 @@ export class ArticleGenerator {
 
     constructor(shortTermCollection: any, longTermCollection: any) {
         const settings = EMBEDDER_CONFIG.settings.gaia;
-        this.baseUrl = settings.baseUrl;
-        this.model = 'llama2-7b-chat';  // Different model for chat
+        // this.baseUrl = settings.baseUrl;
+        this.baseUrl = 'https://llama3b.gaia.domains/v1'; //smaller model
+        this.model = 'llama3b';  // Different model for chat
         this.shortTermCollection = shortTermCollection;
         this.longTermCollection = longTermCollection;
     }

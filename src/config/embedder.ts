@@ -1,12 +1,14 @@
 export const EMBEDDER_CONFIG = {
     // Primary embedder choice
-    active: 'gaia' as 'chroma' | 'gaia',
+    active: 'gaia' as 'chroma' | 'gaia', // default to gaia
+    // active: 'chroma' as 'chroma' | 'gaia', // default to chroma
     
     // Configuration for each embedder
     settings: {
         gaia: {
             baseUrl: 'https://llama8b.gaia.domains/v1',
-            model: 'nomic-embed-text-v1.5',
+            // baseUrl: 'https://llama3b.gaia.domains/v1',
+            model: 'nomic-embed-text-v1.5.f16',
             maxBatchSize: 1,
             timeout: 30000
         },

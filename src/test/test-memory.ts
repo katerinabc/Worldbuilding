@@ -109,5 +109,5 @@ async function testMemory() {
 }
 
 // Get embedder choice from command line or default to 'chroma'
-const embedderChoice = process.argv[2] as 'chroma' | 'gaia' || 'chroma';
+// const embedderChoice = process.argv[2] as 'chroma' | 'gaia' || 'chroma';
 testMemory();
