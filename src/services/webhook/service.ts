@@ -35,41 +35,41 @@ export class ListenBot {
         this.apiKey = apiKey;
     }
 
-    async createWebhook(): Promise<void> {
-        try {
-            const response:AxiosResponse<BotWebhook> = await axios.post(
-            `${this.baseUrl}/farcaster/webhook`,
-            {   // Data object
-                subscription: {'cast.created': {mentioned_fids: [913741], parent_author_fids: [913741]}},
-                name: 'mentionbot',
-                url: 'https://webhook.netnigma.io/webhook'
-            },
-            {   // Config object (including headers)
-                headers: {
-                    accept: 'application/json',
-                    'content-type': 'application/json',
-                    'x-api-key': this.apiKey
-                }
-            }
-        );
+    // async createWebhook(): Promise<void> {
+    //     try {
+    //         const response:AxiosResponse<BotWebhook> = await axios.post(
+    //         `${this.baseUrl}/farcaster/webhook`,
+    //         {   // Data object
+    //             subscription: {'cast.created': {mentioned_fids: [913741], parent_author_fids: [913741]}},
+    //             name: 'mentionbot',
+    //             url: 'https://webhook.netnigma.io/webhook'
+    //         },
+    //         {   // Config object (including headers)
+    //             headers: {
+    //                 accept: 'application/json',
+    //                 'content-type': 'application/json',
+    //                 'x-api-key': this.apiKey
+    //             }
+    //         }
+    //     );
         
-        // Add success logging
-        console.log('service: Webhook created successfully:', {
-            status: response.status,
-            data: response.data
-        });
+    //     // Add success logging
+    //     console.log('service: Webhook created successfully:', {
+    //         status: response.status,
+    //         data: response.data
+    //     });
 
-        } catch(error: unknown) {
-            if (axios.isAxiosError(error)) {
-                console.error('Webhook API error:', {
-                    message: error.message,
-                    details: error.response?.data
-                });
-            } else {
-                console.error('Unknown error:', error);
-            }
-        }
-    }
+    //     } catch(error: unknown) {
+    //         if (axios.isAxiosError(error)) {
+    //             console.error('Webhook API error:', {
+    //                 message: error.message,
+    //                 details: error.response?.data
+    //             });
+    //         } else {
+    //             console.error('Unknown error:', error);
+    //         }
+    //     }
+    // }
 
     async handleWebhook(cast: any) {
         console.log('\n🤖 Bot Processing Webhook:');

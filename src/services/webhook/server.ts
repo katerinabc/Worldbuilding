@@ -22,6 +22,17 @@ const PORT = process.env.PORT || 3000;
 // Initialize the bot service
 const bot = new ListenBot();
 
+// Logging middleware for all requests
+app.use((req: Request, res: Response, next: Function) => {
+    console.log('\n📥 Incoming Request:');
+    console.log('Time:', new Date().toLocaleTimeString());
+    console.log('Method:', req.method);
+    console.log('Path:', req.path);
+    console.log('Headers:', Object.keys(req.headers));
+    console.log('-------------------\n');
+    next();
+});
+
 // Middleware to parse incoming JSON requests
 app.use(bodyParser.json());
 
@@ -50,5 +61,7 @@ app.post('/webhook', async (req: Request, res: Response) => {
 
 // Start the server
 app.listen(PORT, () => {
+    console.log('starting the server to listening to events...');
     console.log(`Secure webhook server running on port ${PORT}`);
+    console.log('waiting for events...');
 });
