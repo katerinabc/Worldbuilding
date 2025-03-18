@@ -34,27 +34,29 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     next();
 });
 
-// Basic route handler for testing
-app.get('/', (req: Request, res: Response) => {
-    console.log('DEBUG: Root path accessed');
-    res.send('Webhook server is running');
-});
-
 // I'm listening to post requests. that's why it's app.post
-app.post('/webhook', async(req: Request, res: Response) => {
+app.post('/webhook', async (req: Request, res: Response) => {
+    
     try {
         console.log('\n📦 Event Data:');
         console.log(JSON.stringify(req.body, null, 2));
         
         // Process the webhook
         await bot.handleWebhook(req.body);
+
         
         // Send success response after processing
-        res.status(200).send('OK');
+       res.status(200).send('OK');
     } catch (error) {
         console.error('Error processing webhook:', error);
         res.status(500).send('Internal Server Error');
     }
+});
+
+// Basic route handler for testing
+app.get('/', (req: Request, res: Response) => {
+    console.log('DEBUG: Root path accessed');
+    res.send('Webhook server is running');
 });
     
 
