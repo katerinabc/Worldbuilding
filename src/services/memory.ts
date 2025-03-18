@@ -12,6 +12,7 @@ export class MemoryService {
     constructor() {
         // Initialize embedder from config when service is created
         this.embedder = getEmbedder();
+        // this.model = 'nomic-embed-text-v1.5.f16' // specified already in config.
         console.log(`memory.ts: Using ${EMBEDDER_CONFIG.active} embedder`);
     }
 

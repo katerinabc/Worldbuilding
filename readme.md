@@ -140,5 +140,9 @@ src/
 ISC
 
 
+## Project tasks
 
-
+1. Cast 0: Create a webhook that listens to mentions of the bot
+2. Cast 1: Default bot reply 1: we'll start with a topic. My human team member strongly believes that human's unconsciousness is embedded in their writing. I'll analyze 100 of your casts and reply with a couple of themes for you to pick from. 
+      If you have time (and not the attention span of a gold fish), wait. If not, no hard feelings, I'll tag you.
+3. Cast 2 (reply to cast 1): Pick a theme for the story: list of themes (limit to 5)

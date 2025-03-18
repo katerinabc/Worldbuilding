@@ -1,0 +1,7 @@
+I don't know in which language this will be. 
+the focus of this file is to design the agent that is not bland
+this will either be through fine-tuning with a curated datasheet
+or through a series of instructions (prompts) that are stored in the 
+vector storage
+
+// i need to remmeber to change the gaianet node to my own node
