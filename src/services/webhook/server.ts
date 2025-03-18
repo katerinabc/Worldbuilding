@@ -10,7 +10,7 @@
  * 
  * This separation allows us to change how we receive webhooks without touching the business logic.
  */ 
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 // import { ListenBot } from './service';
 
 const express = require('express');
@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Log all requests, regardless of path
-app.use((req: Request, res: Response, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
     console.log('\n🔍 New Request:');
     console.log('Time:', new Date().toLocaleTimeString());
     console.log('Method:', req.method);
