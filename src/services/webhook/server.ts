@@ -22,19 +22,17 @@ const PORT = process.env.PORT || 3000;
 // Initialize the bot service
 // const bot = new ListenBot();
 
-// Logging middleware for all requests
-app.use((req: Request, res: Response, next: Function) => {
-    console.log('\n📥 Incoming Request:');
+// Parse JSON bodies
+app.use(express.json());
+
+// Log all requests, regardless of path
+app.use((req: Request, res: Response, next) => {
+    console.log('\n🔍 New Request:');
     console.log('Time:', new Date().toLocaleTimeString());
     console.log('Method:', req.method);
     console.log('Path:', req.path);
-    console.log('Headers:', Object.keys(req.headers));
-    console.log('-------------------\n');
     next();
 });
-
-// Middleware to parse incoming JSON requests
-app.use(bodyParser.json());
 
 // Basic route handler for testing
 app.get('/', (req: Request, res: Response) => {
@@ -43,31 +41,14 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // I'm listening to post requests. that's why it's app.post
-app.post('/webhook', async (req: Request, res: Response) => {
-    try {
-        console.log('\n🔔 Webhook Received!');
-        console.log('Time:', new Date().toLocaleTimeString());
-        console.log('Headers:', Object.keys(req.headers));
-        console.log('Body:', JSON.stringify(req.body, null, 2));
-        console.log('-------------------\n');
-
-        // Process the webhook using our bot service
-        // await bot.handleWebhook(req.body);
-        
-        res.status(200).send('Webhook received successfully');
-    } catch (error) {
-        console.error('\n❌ Webhook Error!');
-        console.error('Time:', new Date().toLocaleTimeString());
-        console.error('Error:', error);
-        console.error('-------------------\n');
-        res.status(500).send('Internal server error');
-    }
+app.post('/', (req: Request, res: Response) => {
+    console.log('\n📦 Event Data:');
+    console.log(JSON.stringify(req.body, null, 2));
+    res.status(200).send('OK');
 });
     
 
 // Start the server
 app.listen(PORT, () => {
-    console.log('starting the server to listening to events...');
-    console.log(`Secure webhook server running on port ${PORT}`);
-    console.log('waiting for events...');
+    console.log(`👂 Listening for events on port ${PORT}`);
 });
