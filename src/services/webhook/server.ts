@@ -11,7 +11,7 @@
  * This separation allows us to change how we receive webhooks without touching the business logic.
  */ 
 import { Request, Response } from 'express';
-import { ListenBot } from './service';
+// import { ListenBot } from './service';
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -20,7 +20,7 @@ export const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize the bot service
-const bot = new ListenBot();
+// const bot = new ListenBot();
 
 // Logging middleware for all requests
 app.use((req: Request, res: Response, next: Function) => {
@@ -50,9 +50,9 @@ app.post('/webhook', async (req: Request, res: Response) => {
         console.log('Headers:', Object.keys(req.headers));
         console.log('Body:', JSON.stringify(req.body, null, 2));
         console.log('-------------------\n');
-        
+
         // Process the webhook using our bot service
-        await bot.handleWebhook(req.body);
+        // await bot.handleWebhook(req.body);
         
         res.status(200).send('Webhook received successfully');
     } catch (error) {
