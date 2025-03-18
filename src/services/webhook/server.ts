@@ -41,7 +41,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // I'm listening to post requests. that's why it's app.post
-app.post('/', (req: Request, res: Response) => {
+app.post('/webhook', (req: Request, res: Response) => {
     console.log('\n📦 Event Data:');
     console.log(JSON.stringify(req.body, null, 2));
     res.status(200).send('OK');
