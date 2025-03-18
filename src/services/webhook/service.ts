@@ -75,7 +75,7 @@ export class ListenBot {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
 
-        console.log('event: ', cast)
+        console.log('event: ', cast.data)
 
         // //1. parse the mention
         // const mentionText = cast.data.text
