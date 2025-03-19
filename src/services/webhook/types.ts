@@ -13,7 +13,10 @@
  * - Provides better TypeScript support
  * - Makes it easier to adapt to API changes
  * - Serves as documentation for data structures
- */ 
+ */
+import { StringLiteral } from "typescript";
+
+ 
 
 export interface BotWebhook {
     subscription: {
@@ -27,14 +30,15 @@ export interface BotWebhook {
 }
 
 export interface WebhookEvent {
-    type: 'first_mention' | 'ongoing_conversation';
+    type: 'cast.created';
+    created_at: string;
     data: {
-        text: string;
-        author: {
-            fid: number;
-            username: string;
-        };
         hash: string;
-        timestamp: string;
+    },
+    author: {
+        fid: number;
+        username: string;
     };
+    text: string;
+    timestamp: string;
 }

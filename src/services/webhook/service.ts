@@ -15,6 +15,7 @@
 
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import dotenv from 'dotenv';
+import { BotTalking } from '../writetofc';
 import { BotWebhook, WebhookEvent } from './types';
 
 dotenv.config();
@@ -71,32 +72,30 @@ export class ListenBot {
     //     }
     // }
 
-    async handleWebhook(cast: any) {
+    async handleWebhook(cast: WebhookEvent) {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
 
         console.log('event: ', cast.data)
 
-        // //1. parse the mention
-        // const mentionText = cast.data.text
-        // console.log('handlewebhook:', mentionText)
-        
-        // // Check if this is a mention event
-        // if (
-        //     // cast.type === 'cast.created' && cast.data.mentioned_fids?.includes(913741)
-        //     cast.type === 'cast.created'
-        // ) {
-        //     console.log('✅ Bot was mentioned!');
-        //     console.log('Message:', cast.data.text);
-        //     console.log('From:', cast.data.author.username);
+        //1. parse the mention
+        if (cast.type === 'cast.created' && cast.author.fid != 12021) {
+            const mentionText = cast.text
+            console.log('handlewebhook:', mentionText)
+      
+            console.log('✅ Bot was mentioned!');
+            console.log('Message:', cast.text);
+            console.log('From:', cast.author.username);
 
-        //     // return this.defaultPoem
+            const botTalking = new BotTalking()
 
-        // } else {
-        //     console.log('❌ Not a mention event');
-        // }
-        
-        console.log('-------------------\n');
+            const castHash = cast.data.hash
+            const botSaysHiResponse = await botTalking.botSaysHi(this.defaultPoem(), castHash)
+
+            return botSaysHiResponse
+        } else {
+            console.log('❌ Not a mention event', cast.type);
+        }
     }
 
     private defaultPoem() {
@@ -110,6 +109,7 @@ export class ListenBot {
                 sage ich und du sagst: //
                 ich bin auch noch da.
                 - Steffen Jacobs, Sprechstück`;
-    }
+    
+            }
 }  // Close listenBot class
 

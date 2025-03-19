@@ -12,6 +12,51 @@ dotenv.config();
  * @param targetUserFname - fname of the user whose likes are storified
  */
 
+export class BotTalking {
+
+    private readonly apiKey: string;
+    private readonly baseUrl: string = 'https://api.neynar.com/v2';
+
+    constructor() {
+        const apiKey = process.env.NEYNAR_API_KEY;
+        if (!apiKey) {  
+            throw new Error('NEYNAR_API_KEY not found in env vari')
+        }
+        this.apiKey = apiKey
+    }
+    
+    
+    async botSaysHi(botmessage: string, castHash: string) {
+
+        try {
+            const textToCast = botmessage
+            const response = await axios.post(
+                `${this.baseUrl}/farcaster/cast`,
+                 {
+                    text:textToCast,
+                    parent:castHash,
+                    signer_uuid: '480f13ff-7223-4b65-b71b-801044bf9779'
+                },
+                {
+                    headers: {
+                        accept: 'application/json',
+                        'content-type': 'application/json',
+                        'x-api-key': this.apiKey,
+                    }
+                
+                }
+            )
+
+            console.log('Cast published successfully', response.data)
+
+        } catch (error) {
+            console.error('error writing to fc', error)
+            throw error
+        }
+
+    }
+}
+
 export class WriteToFc {
     private readonly apiKey: string;
     private readonly baseUrl: string = 'https://api.neynar.com/v2';
@@ -72,6 +117,7 @@ export class WriteToFc {
         }
 
     }
+
 
     async getHash(response: any) {
         try {
