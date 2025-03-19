@@ -18,7 +18,7 @@ export class BotThinking {
     constructor() {
         const settings = EMBEDDER_CONFIG.settings.gaia;
         // this.baseUrl = settings.baseUrl;
-        this.baseUrl = 'https://llama3b.gaia.domains/v1'; //smaller model
+        this.baseUrl = 'https://llama8b.gaia.domains/v1'; //smaller model
         this.model = 'llama3b';  // Different model for chat
 
     }
