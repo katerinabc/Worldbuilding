@@ -1,1 +1,1 @@
-web: node --inspect npm run run:server 
+web: node --inspect=0.0.0.0:$PORT npm run run:server 
