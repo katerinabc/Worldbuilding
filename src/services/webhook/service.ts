@@ -72,29 +72,32 @@ export class ListenBot {
     //     }
     // }
 
-    async handleWebhook(cast: WebhookEvent) {
+    async handleWebhook(event: WebhookEvent) {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
 
-        console.log('event: ', cast.data)
+        console.log('event: ', event.data.hash)
 
         //1. parse the mention
-        if (cast.type === 'cast.created' && cast.author.fid != 12021) {
-            const mentionText = cast.text
+        if (event.type === 'cast.created' && 
+            event.mentioned_profiles.some(profile => profile.fid == 913741) &&
+            event.author.fid != 913741
+            ) {
+            const mentionText = event.text
             console.log('handlewebhook:', mentionText)
       
             console.log('✅ Bot was mentioned!');
-            console.log('Message:', cast.text);
-            console.log('From:', cast.author.username);
+            console.log('Message:', event.text);
+            console.log('From:', event.author.username);
 
             const botTalking = new BotTalking()
 
-            const castHash = cast.data.hash
+            const castHash = event.data.hash
             const botSaysHiResponse = await botTalking.botSaysHi(this.defaultPoem(), castHash)
 
             return botSaysHiResponse
         } else {
-            console.log('❌ Not a mention event', cast.type);
+            console.log('❌ Not a mention event', event.type);
         }
     }
 

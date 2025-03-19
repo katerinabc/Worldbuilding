@@ -40,5 +40,9 @@ export interface WebhookEvent {
         username: string;
     };
     text: string;
+    mentioned_profiles: Array<{
+        fid: number;
+        username: string;
+    }>;
     timestamp: string;
 }
