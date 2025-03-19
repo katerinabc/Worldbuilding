@@ -43,7 +43,7 @@ app.post('/webhook', async (req: Request, res: Response) => {
     
     try {
         console.log('\n📦 Event Data:');
-        console.log(JSON.stringify(req.body, null, 2));
+        // console.log(JSON.stringify(req.body, null, 2));
         
         // Process the webhook
         await bot.handleWebhook(req.body);

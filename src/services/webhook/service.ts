@@ -76,11 +76,14 @@ export class ListenBot {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
 
-        console.log('event: ', event.data.hash)
+        console.log('hash: ', event.data.hash)
+        console.log('text: ', event.text)
+        console.log('Author: ', event.author.username)
+        console.log('Mentioned: ', event.mentioned_profiles.map(profile => profile.username))
 
         //1. parse the mention
         if (event.type === 'cast.created' && 
-            event.mentioned_profiles.some(profile => profile.fid == 913741) &&
+            event.mentioned_profiles?.some(profile => profile.fid == 913741) &&
             event.author.fid != 913741
             ) {
             const mentionText = event.text
@@ -98,6 +101,12 @@ export class ListenBot {
             return botSaysHiResponse
         } else {
             console.log('❌ Not a mention event', event.type);
+
+            const botTalking = new BotTalking()
+            const castHash = event.data.hash
+            const botfailurereply = "Return to Claude!"
+            const botSaysHiResponse = await botTalking.botSaysHi(botfailurereply, castHash)
+            return botSaysHiResponse
         }
     }
 
