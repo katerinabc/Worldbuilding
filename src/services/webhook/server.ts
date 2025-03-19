@@ -33,6 +33,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     console.log('Path:', req.path);
     next();
 });
+app.post('/', async (req: Request, res: Response) => {
+    console.log('DEBUG: Root path accessed with post');
+    res.send('Webhook server is running. smile.');
+});
 
 // I'm listening to post requests. that's why it's app.post
 app.post('/webhook', async (req: Request, res: Response) => {
@@ -55,8 +59,8 @@ app.post('/webhook', async (req: Request, res: Response) => {
 
 // Basic route handler for testing
 app.get('/', (req: Request, res: Response) => {
-    console.log('DEBUG: Root path accessed');
-    res.send('Webhook server is running');
+    console.log('DEBUG: Root path accessed with get');
+    res.send('Webhook server is running. smile.');
 });
     
 

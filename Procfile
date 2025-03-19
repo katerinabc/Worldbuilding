@@ -1,1 +1,1 @@
-web: npm run run:server 
+web: node --inspect npm run run:server 
