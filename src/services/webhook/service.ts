@@ -33,7 +33,7 @@ export class ListenBot {
         text = text.toLowerCase()
         if (text.includes('show yourself')) return 'show_yourself';
         if (text.includes('story') || text.includes('world')) return 'story';
-        return 'sayhi';
+        return 'default';
     }
 
     constructor() {
@@ -112,7 +112,9 @@ export class ListenBot {
                     default: 
                     try {
                         const defaultprompt = prompt.sayhiPrompt.replace('{user_name}', user_name)
+                        console.log('[TEST] defaultprompt', defaultprompt)
                         const botreply = await botThinking.callGaia(user_cast, defaultprompt)
+                        console.log('[TEST] botreply', botreply)
 
                         return await botPosting.botSaysHi(botreply, castHash);
                     } catch (error) {
