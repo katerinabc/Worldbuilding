@@ -76,10 +76,14 @@ export class ListenBot {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
 
+        console.log('Full event:', JSON.stringify(event, null, 2));  // Add this line
+
         console.log('hash: ', event.data.hash)
         console.log('text: ', event.text)
         console.log('Author: ', event.author.username)
         console.log('Mentioned: ', event.mentioned_profiles.map(profile => profile.username))
+        console.log('event data', event.data)
+        
 
         //1. parse the mention
         if (event.type === 'cast.created' && 
