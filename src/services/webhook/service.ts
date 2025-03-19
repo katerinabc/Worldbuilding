@@ -15,9 +15,10 @@
 
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import dotenv from 'dotenv';
-import { BotTalking } from '../writetofc';
+import { BotPosting } from '../writetofc';
+import { BotTalking, BotThinking } from '../bottalking';
 import { BotWebhook, WebhookEvent } from './types';
-
+import { Prompts } from '../prompts';
 dotenv.config();
 
 export class ListenBot {
@@ -27,6 +28,13 @@ export class ListenBot {
     private handlers = {
         'cast.created': this.handleWebhook
     };
+
+    private parseConversationStage(text: string) {
+        text = text.toLowerCase()
+        if (text.includes('show yourself')) return 'show_yourself';
+        if (text.includes('story') || text.includes('world')) return 'story';
+        return 'sayhi';
+    }
 
     constructor() {
         const apiKey = process.env.NEYNAR_API_KEY;
@@ -75,38 +83,55 @@ export class ListenBot {
     async handleWebhook(event: WebhookEvent) {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
-
-        console.log('Full event:', JSON.stringify(event, null, 2));  
-        console.log('Console log event data', event.data)
-
+        // console.log('Full event:', JSON.stringify(event, null, 2));  
+        // console.log('Console log event data', event.data)
         console.log('Console log hash: ', event.data.hash)
 
-        //1. parse the mention
         if (event.type === 'cast.created' && 
             event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
             event.data.author.fid != 913741
             ) {
-            const mentionText = event.data.text
-            console.log('handlewebhook:', mentionText)
-      
-            console.log('✅ Bot was mentioned!');
-            console.log('Message:', event.data.text);
-            console.log('From:', event.data.author.username);
+                const stage = this.parseConversationStage(event.data.text);
+                const castHash = event.data.hash;
+                const user_name = event.data.author.username;
+                const user_fid = event.data.author.fid;
+                const user_cast = event.data.text
+                const botPosting = new BotPosting();
+                const botThinking = new BotThinking()
+                const prompt = new Prompts()
 
-            const botTalking = new BotTalking()
+                switch (stage) {
+                    case 'show_yourself':
+                        const botSaysHiResponse = await botPosting.botSaysHi(this.defaultPoem(), castHash)
+                        return botSaysHiResponse
+                    
+                    case 'story':
+                        // todo implement
+                        return await botPosting.botSaysHi( "...",castHash);
+                    
+                    default: 
+                    try {
+                        const defaultprompt = prompt.sayhiPrompt.replace('{user_name}', user_name)
+                        const botreply = await botThinking.callGaia(user_cast, defaultprompt)
 
-            const castHash = event.data.hash
-            const botSaysHiResponse = await botTalking.botSaysHi(this.defaultPoem(), castHash)
+                        return await botPosting.botSaysHi(botreply, castHash);
+                    } catch (error) {
+                        console.error('Error in default case', error)
+                        return await botPosting.botSaysHi("nothing working. come back later plz. @kbc error here", castHash)
+                    }
 
-            return botSaysHiResponse
+                        
+                        
+                }
+
         } else {
             console.log('❌ Not a mention event', event.type);
 
-            const botTalking = new BotTalking()
-            const castHash = event.data.hash
-            const botfailurereply = "Return to Claude!"
-            const botSaysHiResponse = await botTalking.botSaysHi(botfailurereply, castHash)
-            return botSaysHiResponse
+            // const botTalking = new BotTalking()
+            // const castHash = event.data.hash
+            // const botfailurereply = "Return to Claude!"
+            // const botSaysHiResponse = await botTalking.botSaysHi(botfailurereply, castHash)
+            // return botSaysHiResponse
         }
     }
 
@@ -123,5 +148,10 @@ export class ListenBot {
                 - Steffen Jacobs, Sprechstück`;
     
             }
+
+    private async sayhiDefault(event: WebhookEvent) {
+        const botTalking = new BotTalking()
+        return botTalking.callGaia()
+    }
 }  // Close listenBot class
 

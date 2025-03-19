@@ -12,7 +12,7 @@ dotenv.config();
  * @param targetUserFname - fname of the user whose likes are storified
  */
 
-export class BotTalking {
+export class BotPosting {
 
     private readonly apiKey: string;
     private readonly baseUrl: string = 'https://api.neynar.com/v2';
@@ -26,7 +26,7 @@ export class BotTalking {
     }
     
     
-    async botSaysHi(botmessage: string, castHash: string) {
+    async botSaysHi(botmessage: string, castHash: string,  user_name: string | null = null, user_fid: number | null = null) {
 
         try {
             const textToCast = botmessage
@@ -48,6 +48,9 @@ export class BotTalking {
             )
 
             console.log('Cast published successfully', response.data)
+            // const getHash = response.data.cast.hash
+
+            // return getHash
 
         } catch (error) {
             console.error('error writing to fc', error)

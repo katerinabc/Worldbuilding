@@ -31,7 +31,7 @@ export interface BotWebhook {
 
 export interface WebhookEvent {
     type: 'cast.created';
-    created_at: number;  // Changed from string as it's a timestamp
+    created_at: number; 
     data: {
         object: 'cast';
         hash: string;
