@@ -16,7 +16,7 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import dotenv from 'dotenv';
 import { BotPosting } from '../writetofc';
-import { BotTalking, BotThinking } from '../bottalking';
+import { BotThinking } from '../bottalking';
 import { BotWebhook, WebhookEvent } from './types';
 import { Prompts } from '../prompts';
 dotenv.config();
