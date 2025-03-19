@@ -151,9 +151,5 @@ export class ListenBot {
     
             }
 
-    private async sayhiDefault(event: WebhookEvent) {
-        const botTalking = new BotTalking()
-        return botTalking.callGaia()
-    }
 }  // Close listenBot class
 
