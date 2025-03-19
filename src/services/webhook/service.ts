@@ -79,23 +79,23 @@ export class ListenBot {
         console.log('Full event:', JSON.stringify(event, null, 2));  // Add this line
 
         console.log('hash: ', event.data.hash)
-        console.log('text: ', event.text)
-        console.log('Author: ', event.author.username)
-        console.log('Mentioned: ', event.mentioned_profiles.map(profile => profile.username))
+        console.log('text: ', event.data.text)
+        console.log('Author: ', event.data.author.username)
+        console.log('Mentioned: ', event.data.mentioned_profiles.map(profile => profile.username))
         console.log('event data', event.data)
         
 
         //1. parse the mention
         if (event.type === 'cast.created' && 
-            event.mentioned_profiles?.some(profile => profile.fid == 913741) &&
-            event.author.fid != 913741
+            event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
+            event.data.author.fid != 913741
             ) {
-            const mentionText = event.text
+            const mentionText = event.data.text
             console.log('handlewebhook:', mentionText)
       
             console.log('✅ Bot was mentioned!');
-            console.log('Message:', event.text);
-            console.log('From:', event.author.username);
+            console.log('Message:', event.data.text);
+            console.log('From:', event.data.author.username);
 
             const botTalking = new BotTalking()
 

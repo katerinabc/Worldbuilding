@@ -31,19 +31,67 @@ export interface BotWebhook {
 
 export interface WebhookEvent {
     type: 'cast.created';
-    created_at: string;
+    created_at: number;  // Changed from string as it's a timestamp
     data: {
+        object: 'cast';
         hash: string;
-    },
-    author: {
-        fid: number;
-        username: string;
-    };
-    text: string;
-    mentioned_profiles: Array<{
-        object: "user";
-        fid: number;
-        username: string;
-    }>;
-    timestamp: string;
+        author: {
+            object: 'user';
+            fid: number;
+            username: string;
+            display_name: string;
+            pfp_url: string;
+            custody_address: string;
+        };
+        thread_hash: string;
+        parent_hash: string | null;
+        parent_url: string;
+        root_parent_url: string;
+        parent_author: {
+            fid: number | null;
+        };
+        text: string;
+        timestamp: string;
+        embeds: any[];
+        channel: {
+            object: 'channel_dehydrated';
+            id: string;
+            name: string;
+            image_url: string;
+        };
+        reactions: {
+            likes_count: number;
+            recasts_count: number;
+            likes: any[];
+            recasts: any[];
+        };
+        replies: {
+            count: number;
+        };
+        mentioned_profiles: Array<{
+            object: 'user';
+            fid: number;
+            username: string;
+            custody_address: string;
+            display_name: string;
+            pfp_url: string;
+            profile: {
+                bio: {
+                    text: string;
+                    mentioned_profiles: any[];
+                };
+            };
+            follower_count: number;
+            following_count: number;
+            verifications: string[];
+            power_badge: boolean;
+        }>;
+        mentioned_profiles_ranges: Array<{
+            start: number;
+            end: number;
+        }>;
+        mentioned_channels: any[];
+        mentioned_channels_ranges: any[];
+        event_timestamp: string;
+    }
 }
