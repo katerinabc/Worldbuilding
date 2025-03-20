@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { AxiosResponse } from 'axios';
 import dotenv from 'dotenv';
-import { Cast, UserFeedResponse } from './types';
+import { Cast, FetchSingleCast, UserFeedResponse } from './types';
 
 dotenv.config();
 
@@ -84,7 +84,7 @@ export class FetchReply {
         this.hash = hash;
     }
 
-    async getReplytoBot(): Promise<Cast> {
+    async getReplytoBot(): Promise<FetchSingleCast> {
         try {
             const url = `${this.baseUrl}/farcaster/cast`;
             const headers = {
@@ -107,7 +107,7 @@ export class FetchReply {
                 }
             });
             
-            const response: AxiosResponse<Cast> = await axios.get(
+            const response: AxiosResponse<FetchSingleCast> = await axios.get(
                 url,
                 {
                     headers,
@@ -118,13 +118,13 @@ export class FetchReply {
             console.log('[API RESPONSE] Status:', response.status);
             console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
             
-            const replyCast = response.data;
+            const replyCast = response.data.cast;
             if (!replyCast) {
                 console.log('[API RESPONSE] No cast found in response');
                 throw new Error('No cast found in response');
             }
             
-            return replyCast;
+            return { cast: replyCast };
 
         } catch (error) {
             if (axios.isAxiosError(error)) {

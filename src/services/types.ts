@@ -121,6 +121,10 @@ export interface UserFeedResponse {
     };
 } 
 
+export interface FetchSingleCast {
+    cast: Cast;
+}
+
 // TYPES FOR MEMORY SERVICE
 
 // Define what an embedding vector looks like

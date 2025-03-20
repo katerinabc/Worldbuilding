@@ -164,12 +164,12 @@ export class ListenBot {
                 // update state (hash)
                 this.storyState.updateConversation(fid,{
                     stage: 4,
-                    hash: replyCast.hash,
+                    hash: replyCast.cast.hash,
                     lastAttempt: new Date()
                 });
 
                 // Continue to stage 4
-                return await this.handleStoryFlow(fid, replyCast.hash, username);
+                return await this.handleStoryFlow(fid, replyCast.cast.hash, username);
 
             } catch (error) {
                 console.error('[ERROR] in stage 3:', error);
