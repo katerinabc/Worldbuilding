@@ -139,12 +139,12 @@ export class StoryState {
 
     updateConversation(fid: number, updates: Partial<Conversation>) {
         const conversation = this.conversations.get(fid);
-        console.log('[DEBUG] Before update - Conversation state:', conversation);
+        console.log('[DEBUG Types] Before update - Conversation state:', conversation);
         if (conversation) {
             Object.assign(conversation, updates);
-            console.log('[DEBUG] After update - Conversation state:', conversation);
+            console.log('[DEBUG Types] After update - Conversation state:', conversation);
         } else {
-            console.log('[DEBUG] No conversation found for fid:', fid);
+            console.log('[DEBUG Types] No conversation found for fid:', fid);
         }
     }
     

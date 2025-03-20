@@ -136,7 +136,7 @@ export class ListenBot {
                     success: true,
                     stage: 2,
                     message: 'waiting for user reply',
-                    hash: botReply
+                    hash: hash // we keep the hash the same until the user replies
                 } 
 
             } catch (error) {
@@ -245,12 +245,13 @@ export class ListenBot {
         console.log('Time:', new Date().toLocaleTimeString());
         // console.log('Full event:', JSON.stringify(event, null, 2));  
         // console.log('Console log event data', event.data)
-        console.log('Console log hash: ', event.data.hash)
-        console.log('[LOG]', event.type)
-        console.log('[LOG]', event.data.text)
-        console.log('[LOG]', event.data.mentioned_profiles)
-        console.log('[LOG]', event.data.parent_author?.fid)
-
+        console.log('[LOG HANDLE WBH] : ', event.type)
+        console.log('[LOG HANDLE WBH] : ', event.data.hash)
+        console.log('[LOG HANDLE WBH] : ', event.data.text)
+        console.log('[LOG HANDLE WBH] : ', event.data.author.fid)
+        console.log('[LOG HANDLE WBH] : ', event.data.mentioned_profiles)
+        console.log('[LOG HANDLE WBH] : ', event.data.parent_author?.fid)
+        
          // Check if we've already replied to this hash
          if (this.repliedHashes.has(event.data.hash)) {
             console.log('Already replied to this hash:', event.data.hash);
@@ -262,7 +263,6 @@ export class ListenBot {
             event.data.author.fid != 913741 &&
             event.data.parent_author?.fid != 913741
 
-            // check for hash that has already been replied to by bot. Via reply and time_period?
             ) {
                 const stage = this.parseConversationStage(event.data.text);
                 const castHash = event.data.hash;
@@ -308,6 +308,7 @@ export class ListenBot {
             event.data.parent_author?.fid == 913741
             ) { 
                 try {
+                    console.log('[LOG HANDLE WBH] : ', 'reply to bot detected')
                     const user_fid = event.data.author.fid;
                     const castHash = event.data.hash;
                     const user_name = event.data.author.username;
@@ -316,6 +317,8 @@ export class ListenBot {
                     const conversation = this.storyState.conversations.get(user_fid);
                     
                     // If we're in stage 2 and this is a reply to our message, move to stage 3
+                    // this is currently creating an error as we are at stage 1 everytime
+                    // the bot restarts
                     if (conversation && conversation.stage === 2) {
                         console.log('[DEBUG] Moving from stage 2 to 3 for reply');
                         this.storyState.updateConversation(user_fid, {

@@ -102,9 +102,16 @@ export class FetchReply {
      */
     async getReplytoBot(): Promise<Cast> {
         try {
-            // let allCasts: Cast[] = [];
-            // let cursor = null;
-            // const TARGET_LIMIT = limit;
+            console.log('[DEBUG FEED] Fetching cast with hash:', this.hash);
+            console.log('[DEBUG FEED] Using API endpoint:', `${this.baseUrl}/farcaster/feed/cast`);
+            console.log('[DEBUG FEED] API parameters:', {
+                identifier: this.hash,
+                type: 'hash'
+            });
+            console.log('[DEBUG FEED] API headers:', {
+                accept: 'application/json',
+                'x-api-key': this.apiKey.substring(0, 4) + '...' // Only log first 4 chars of API key
+            });
             
             const response: AxiosResponse<UserFeedResponse> = await axios.get(
                 `${this.baseUrl}/farcaster/feed/cast`,
@@ -121,21 +128,30 @@ export class FetchReply {
             );
 
             // logging the response for debugging
-            console.log('Feed:API response:', {
+            console.log('[DEBUG FEED] API response:', {
                 status: response.status,
-                hash: response.data.casts[0].hash,
-                text: response.data.casts[0].text,
+                statusText: response.statusText,
+                data: response.data
             });
             
             const replyCast = response.data.casts[0]
 
-            console.log(`Feed: got cast ${replyCast.text} `);
-            console.log(`Feed: got cast ${replyCast.hash} `);
+            console.log(`[DEBUG FEED] Got cast:`, {
+                text: replyCast.text,
+                hash: replyCast.hash,
+                author: replyCast.author.username
+            });
             
             return replyCast;
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
+                console.error('[DEBUG FEED] API Error:', {
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    message: error.message
+                });
                 throw new Error(`Failed to fetch casts: ${error.message}`);
             }
             throw error;
