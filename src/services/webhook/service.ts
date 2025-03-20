@@ -107,49 +107,48 @@ export class ListenBot {
         }
                 
         if (currentStage === 2) {
-
             try {
-            // get casts from user
-            const userFeed = new FetchUserCasts(fid);
-            const userCasts = await userFeed.getUserCasts(10);
-            console.log('[TEST] userCasts', userCasts[0].text.slice(0, 1))
+                // get casts from user
+                const userFeed = new FetchUserCasts(fid);
+                const userCasts = await userFeed.getUserCasts(10);
+                console.log('[TEST] userCasts', userCasts[0].text.slice(0, 1))
 
-            // give feed to botthinking
-            const worldBuildingPrompt = this.prompt.worldbuilding_user_prompt(userCasts)
+                // give feed to botthinking
+                const worldBuildingPrompt = this.prompt.worldbuilding_user_prompt(userCasts)
 
-            // get the adjectives via gaianet
-            const adjectives = await this.botThinking.callGaiaAdjectives(
-                this.prompt.worldbuilding_system_prompt, 
-                worldBuildingPrompt);
-            console.log('[TEST] adjectives', adjectives)
-            
-            // reply with adjectives
-            const botReply = await this.botPosting.botSaysHi(adjectives, hash)
-            console.log('[TEST] botReply stage 2', botReply)
+                // get the adjectives via gaianet
+                const adjectives = await this.botThinking.callGaiaAdjectives(
+                    this.prompt.worldbuilding_system_prompt, 
+                    worldBuildingPrompt);
+                console.log('[TEST] adjectives', adjectives)
+                
+                // reply with adjectives
+                const botReply = await this.botPosting.botSaysHi(adjectives, hash)
+                console.log('[TEST] botReply stage 2', botReply)
 
-            // update state (hash)
-            this.storyState.updateConversation(fid,{
-                stage: 3,
-                hash: botReply,
-                lastAttempt: new Date()
-            });
-            return {
-                success: true,
-                stage: 3,
-                message: 'successfully posted story phase 3 & updated state',
-                hash: botReply
-            } 
+                // update state (hash) but stay in stage 2
+                this.storyState.updateConversation(fid,{
+                    stage: 2,  // Stay in stage 2
+                    hash: botReply,
+                    lastAttempt: new Date()
+                });
+                return {
+                    success: true,
+                    stage: 2,
+                    message: 'waiting for user reply',
+                    hash: botReply
+                } 
 
-        }  catch (error) {
-            console.error('[ERROR] botStoryPhase1', error);
-            return {
-                success: false, 
-                stage: 1,
-                message: 'error posting story phase 1',
-                hash: null,
-                error: error instanceof Error ? error.message : 'unknown error'
+            } catch (error) {
+                console.error('[ERROR] in stage 2:', error);
+                return {
+                    success: false, 
+                    stage: 2,
+                    message: 'error in stage 2',
+                    hash: null,
+                    error: error instanceof Error ? error.message : 'unknown error'
+                }
             }
-        }  
         }                
         if (currentStage === 3) {// the users story attempt 1
             try {
@@ -257,7 +256,9 @@ export class ListenBot {
 
         if (event.type === 'cast.created' && 
             event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
-            event.data.author.fid != 913741
+            event.data.author.fid != 913741 &&
+            event.data.parent_author?.fid != 913741
+
             // check for hash that has already been replied to by bot. Via reply and time_period?
             ) {
                 const stage = this.parseConversationStage(event.data.text);
@@ -299,7 +300,44 @@ export class ListenBot {
                         
                 }
 
-        } else {
+        } 
+        if (event.type === 'cast.created' && 
+            event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
+            event.data.author.fid != 913741 &&
+            event.data.parent_author?.fid == 913741
+            ) { 
+                try {
+                    const user_fid = event.data.author.fid;
+                    const castHash = event.data.hash;
+                    const user_name = event.data.author.username;
+                    
+                    // Get current conversation state
+                    const conversation = this.storyState.conversations.get(user_fid);
+                    
+                    // If we're in stage 2 and this is a reply to our message, move to stage 3
+                    if (conversation && conversation.stage === 2) {
+                        console.log('[DEBUG] Moving from stage 2 to 3 for reply');
+                        this.storyState.updateConversation(user_fid, {
+                            stage: 3,
+                            hash: castHash,
+                            lastAttempt: new Date()
+                        });
+                    }
+                    
+                    // Continue the story flow with the reply
+                    const result = await this.handleStoryFlow(
+                        user_fid,
+                        castHash,
+                        user_name
+                    );
+                    console.log('[DEBUG] Story flow result from reply:', result);
+                    return result;
+                } catch (error) {
+                    console.error('[ERROR] handling reply:', error);
+                    return await this.botPosting.botSaysHi("nothing working. come back later plz. @kbc error here", event.data.hash)
+                }
+            }
+         else {
             console.log('❌ Not a mention event', event.type);
 
             // const botTalking = new BotTalking()
