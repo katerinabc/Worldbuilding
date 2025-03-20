@@ -29,7 +29,9 @@ export class ListenBot {
     private storyState: StoryState;
     private readonly botPosting: BotPosting;    
     private readonly botThinking: BotThinking;  
-    private readonly prompt: Prompts;           
+    private readonly prompt: Prompts; 
+    private repliedHashes: Set<string> = new Set();  // Track all hashes we've replied to
+          
 
     constructor() {
         const apiKey = process.env.NEYNAR_API_KEY;
@@ -191,6 +193,12 @@ export class ListenBot {
         console.log('Console log hash: ', event.data.hash)
         console.log('[LOG', event.data.text)
 
+         // Check if we've already replied to this hash
+         if (this.repliedHashes.has(event.data.hash)) {
+            console.log('Already replied to this hash:', event.data.hash);
+            return;
+        }
+
         if (event.type === 'cast.created' && 
             event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
             event.data.author.fid != 913741
@@ -242,6 +250,9 @@ export class ListenBot {
             // const botSaysHiResponse = await botTalking.botSaysHi(botfailurereply, castHash)
             // return botSaysHiResponse
         }
+    // After successfully posting a reply, mark the hash as replied
+    this.repliedHashes.add(event.data.hash);
+
     }
 
 
@@ -269,6 +280,7 @@ export class ListenBot {
         Step 1: Foundation
         @kbc believes unconscious ideas are embedded in writing. With all the data you put out, this is scary but serves us well now. Give me a 42 seconds to "get you". Use that time to "get me".`
     }
+
 
 }  // Close listenBot class
 
