@@ -145,7 +145,7 @@ export class ListenBot {
         if (currentStage === 3) {// the users story attempt 1
             try {
                 // get reply to previous cast
-                const replytoBot = new FetchReply(fid, hash)
+                const replytoBot = new FetchReply(hash)
                 const replyCast = await replytoBot.getReplytoBot()
                 
                 if (!replyCast) {
