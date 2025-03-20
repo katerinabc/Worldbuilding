@@ -147,5 +147,16 @@ export class StoryState {
             console.log('[DEBUG Types] No conversation found for fid:', fid);
         }
     }
-    
+
+    jumpintoConveration(fid: number, updates: Partial<Conversation>) {
+        console.log('[LOG types] jumping to stage 3');
+        this.conversations.set(fid, {
+            stage: 3,
+            hash: updates.hash || '',
+            username: updates.username || '',
+            fid: fid,
+            retries: updates.retries || 0,
+            lastAttempt: updates.lastAttempt || new Date()
+        });
+    }
 }

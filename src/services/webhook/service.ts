@@ -297,7 +297,7 @@ export class ListenBot {
             event.data.author?.fid != 913741 // not the bot's own cast (so the bot should reply to replies to it, but not reply to itself)
             ) { 
                 try {
-                    console.log('[LOG WBH] : ', 'reply to bot detected: ', event.data.text, ' by ', event.data.author?.username)
+                    console.log('[LOG WBH] : ', 'reply from ', event.data.author?.username, 'detected, casting ', event.data.text)
                     const user_fid = event.data.author?.fid;
                     const castHash = event.data.hash;
                     const user_name = event.data.author?.username;
@@ -305,9 +305,10 @@ export class ListenBot {
                     // Get current conversation state
                     // const conversation = this.storyState.conversations.get(user_fid);
 
-                    this.storyState.updateConversation(user_fid, {
+                    this.storyState.jumpintoConveration(user_fid, {
                         stage: 3,
                         hash: castHash,
+                        username: user_name,
                         lastAttempt: new Date()
                     });                    
                     // // If we're in stage 2 and this is a reply to our message, move to stage 3
