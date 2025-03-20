@@ -54,13 +54,16 @@ export class ListenBot {
 
     private async handleStoryFlow(fid: number, hash: string, username: string) {
         const conversation = this.storyState.conversations.get(fid);
+        console.log('[DEBUG] Current conversation state:', conversation);
 
         if (!conversation) {
             // New story conversation
             this.storyState.startNewConversation(fid, hash, username);
+            console.log('[DEBUG] Started new conversation for fid:', fid);
         }
 
         const currentStage = conversation ? conversation.stage : 1;
+        console.log('[DEBUG] Current stage:', currentStage);
 
         // handle existing conversation
         switch(currentStage) {
@@ -221,6 +224,11 @@ export class ListenBot {
                             castHash,
                             user_name
                         );
+                        // Mark hash as replied only if successful
+                        // if (result.success) {
+                        //     this.repliedHashes.add(castHash);
+                        // }
+                        // return result;
                     
                     default: 
                     try {
