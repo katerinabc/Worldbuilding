@@ -246,7 +246,10 @@ export class ListenBot {
         // console.log('Full event:', JSON.stringify(event, null, 2));  
         // console.log('Console log event data', event.data)
         console.log('Console log hash: ', event.data.hash)
-        console.log('[LOG', event.data.text)
+        console.log('[LOG]', event.type)
+        console.log('[LOG]', event.data.text)
+        console.log('[LOG]', event.data.mentioned_profiles)
+        console.log('[LOG]', event.data.parent_author?.fid)
 
          // Check if we've already replied to this hash
          if (this.repliedHashes.has(event.data.hash)) {
@@ -302,8 +305,6 @@ export class ListenBot {
 
         } 
         if (event.type === 'cast.created' && 
-            event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
-            event.data.author.fid != 913741 &&
             event.data.parent_author?.fid == 913741
             ) { 
                 try {
