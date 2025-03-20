@@ -80,3 +80,65 @@ export class FetchUserCasts {
         }
     }
 } 
+
+export class FetchReply {
+    private readonly apiKey: string;
+    private readonly baseUrl: string = 'https://api.neynar.com/v2';
+    private targetUserId: number;
+    private hash: string;
+
+    constructor(userId: number = 12021, hash: string) { //adding default value for userid for testing
+        const apiKey = process.env.NEYNAR_API_KEY;
+        if (!apiKey) {
+            throw new Error('NEYNAR_API_KEY not found in environment variables');
+        }
+        this.apiKey = apiKey;
+        this.hash = hash;
+        this.targetUserId = userId;
+    }
+
+    /**
+     * Fetch casts by the user
+     */
+    async getReplytoBot(): Promise<Cast> {
+        try {
+            // let allCasts: Cast[] = [];
+            // let cursor = null;
+            // const TARGET_LIMIT = limit;
+            
+            const response: AxiosResponse<UserFeedResponse> = await axios.get(
+                `${this.baseUrl}/farcaster/feed/cast`,
+                {
+                    headers: {
+                        accept: 'application/json',
+                        'x-api-key': this.apiKey,
+                    },
+                    params: {
+                        identifier: this.hash,
+                        type: 'hash',
+                    }
+                }
+            );
+
+            // logging the response for debugging
+            console.log('Feed:API response:', {
+                status: response.status,
+                hash: response.data.casts[0].hash,
+                text: response.data.casts[0].text,
+            });
+            
+            const replyCast = response.data.casts[0]
+
+            console.log(`Feed: got cast ${replyCast.text} `);
+            console.log(`Feed: got cast ${replyCast.hash} `);
+            
+            return replyCast;
+
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                throw new Error(`Failed to fetch casts: ${error.message}`);
+            }
+            throw error;
+        }
+    }
+}

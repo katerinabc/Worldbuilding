@@ -19,7 +19,7 @@ import { BotPosting } from '../writetofc';
 import { BotThinking } from '../botthinking';
 import { BotWebhook, WebhookEvent, StoryState, StoryFlowResult } from './types';
 import { Prompts } from '../prompts';
-import { FetchUserCasts } from '../feed';
+import { FetchReply, FetchUserCasts } from '../feed';
 dotenv.config();
 
 export class ListenBot {
@@ -122,9 +122,10 @@ export class ListenBot {
                 this.prompt.worldbuilding_system_prompt, 
                 worldBuildingPrompt);
             console.log('[TEST] adjectives', adjectives)
+            
             // reply with adjectives
             const botReply = await this.botPosting.botSaysHi(adjectives, hash)
-            console.log('[TEST] botReply', botReply)
+            console.log('[TEST] botReply stage 2', botReply)
 
             // update state (hash)
             this.storyState.updateConversation(fid,{
@@ -150,7 +151,23 @@ export class ListenBot {
             }
         }  
         }                
-        if (currentStage === 3) {
+        if (currentStage === 3) {// the users story attempt 1
+            // get reply to previous cast
+            const replytoBot = new FetchReply(fid, hash)
+            const replyCast = await replytoBot.getReplytoBot()
+            console.log('[TEST] replyCast', replyCast, replyCast.hash)
+
+            // update state (hash)
+            this.storyState.updateConversation(fid,{
+                stage: 4,
+                hash: replyCast.hash,
+                lastAttempt: new Date()
+            });
+
+            
+        }
+
+        if (currentStage === 4) {// reply with nice one
                 const botReply = await this.botPosting.botSaysHi('nice one (yeah, still in testing mode', hash)
                 console.log('[TEST] botReply', botReply)          
         }
@@ -204,7 +221,7 @@ export class ListenBot {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
         // console.log('Full event:', JSON.stringify(event, null, 2));  
-        console.log('Console log event data', event.data)
+        // console.log('Console log event data', event.data)
         console.log('Console log hash: ', event.data.hash)
         console.log('[LOG', event.data.text)
 
