@@ -112,7 +112,7 @@ export class ListenBot {
             // get casts from user
             const userFeed = new FetchUserCasts(fid);
             const userCasts = await userFeed.getUserCasts(10);
-            console.log('[TEST] userCasts', userCasts)
+            console.log('[TEST] userCasts', userCasts[0].text.slice(0, 1))
 
             // give feed to botthinking
             const worldBuildingPrompt = this.prompt.worldbuilding_user_prompt(userCasts)
@@ -152,19 +152,43 @@ export class ListenBot {
         }  
         }                
         if (currentStage === 3) {// the users story attempt 1
-            // get reply to previous cast
-            const replytoBot = new FetchReply(fid, hash)
-            const replyCast = await replytoBot.getReplytoBot()
-            console.log('[TEST] replyCast', replyCast, replyCast.hash)
+            try {
+                // get reply to previous cast
+                const replytoBot = new FetchReply(fid, hash)
+                const replyCast = await replytoBot.getReplytoBot()
+                
+                if (!replyCast) {
+                    // No reply yet, stay in stage 3
+                    return {
+                        success: true,
+                        stage: 3,
+                        message: 'waiting for user reply',
+                        hash: hash
+                    }
+                }
 
-            // update state (hash)
-            this.storyState.updateConversation(fid,{
-                stage: 4,
-                hash: replyCast.hash,
-                lastAttempt: new Date()
-            });
+                console.log('[TEST] replyCast', replyCast, replyCast.hash)
 
-            
+                // update state (hash)
+                this.storyState.updateConversation(fid,{
+                    stage: 4,
+                    hash: replyCast.hash,
+                    lastAttempt: new Date()
+                });
+
+                // Continue to stage 4
+                return await this.handleStoryFlow(fid, replyCast.hash, username);
+
+            } catch (error) {
+                console.error('[ERROR] in stage 3:', error);
+                return {
+                    success: false,
+                    stage: 3,
+                    message: 'error waiting for user reply',
+                    hash: null,
+                    error: error instanceof Error ? error.message : 'unknown error'
+                }
+            }
         }
 
         if (currentStage === 4) {// reply with nice one
