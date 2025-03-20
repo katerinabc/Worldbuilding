@@ -27,6 +27,7 @@ export class BotPosting {
     
     
     async botSaysHi(botmessage: string, castHash: string,  user_name: string | null = null, user_fid: number | null = null) {
+        // add here a timeout to check for success?
 
         try {
             const textToCast = botmessage
@@ -48,9 +49,9 @@ export class BotPosting {
             )
 
             console.log('Cast published successfully', response.data)
-            // const getHash = response.data.cast.hash
+            const getHash = response.data.cast.hash
 
-            // return getHash
+            return getHash
 
         } catch (error) {
             console.error('error writing to fc', error)

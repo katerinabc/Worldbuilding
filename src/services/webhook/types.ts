@@ -95,3 +95,35 @@ export interface WebhookEvent {
         event_timestamp: string;
     }
 }
+
+export interface Conversation {
+    stage: number;
+    hash: string;
+    username: string;
+    fid: number;
+    retries: number;
+    lastAttempt: Date;
+}
+
+export class StoryState {
+    public conversations: Map<number, Conversation> = new Map();
+
+    startNewConversation(fid: number, hash: string, username: string) {
+        this.conversations.set(fid, {
+            stage: 1,
+            hash,
+            username,
+            fid,
+            retries: 0,
+            lastAttempt: new Date()
+        });
+    }
+
+    updateConversation(fid: number, updates: Partial<Conversation>) {
+        const conversation = this.conversations.get(fid);
+        if (conversation) {
+            Object.assign(conversation, updates);
+        }
+    }
+    
+}

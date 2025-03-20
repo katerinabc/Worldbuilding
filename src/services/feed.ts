@@ -8,9 +8,9 @@ dotenv.config();
 export class FetchUserCasts {
     private readonly apiKey: string;
     private readonly baseUrl: string = 'https://api.neynar.com/v2';
-    private targetUserId: string;
+    private targetUserId: number;
 
-    constructor(userId: string = '12021') { //adding default value for userid for testing
+    constructor(userId: number = 12021) { //adding default value for userid for testing
         const apiKey = process.env.NEYNAR_API_KEY;
         if (!apiKey) {
             throw new Error('NEYNAR_API_KEY not found in environment variables');
@@ -22,11 +22,11 @@ export class FetchUserCasts {
     /**
      * Fetch casts by the user
      */
-    async getUserCasts(): Promise<Cast[]> {
+    async getUserCasts(limit: number = 500): Promise<Cast[]> {
         try {
             let allCasts: Cast[] = [];
             let cursor = null;
-            const TARGET_LIMIT = 500;
+            const TARGET_LIMIT = limit;
 
             // keep fetching until we have 500 casts
             while (allCasts.length < TARGET_LIMIT) {

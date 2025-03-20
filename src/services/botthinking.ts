@@ -23,7 +23,7 @@ export class BotThinking {
 
     }
 
-    public async callGaia(castText: string, prompt: string): Promise<string> {
+    public async callGaiaDefault(castText: string, prompt: string): Promise<string> {
         try {
             const response = await axios.post(
                 `${this.baseUrl}/chat/completions`,
@@ -63,5 +63,46 @@ export class BotThinking {
             throw error;
         }
     }
+
+    public async callGaiaAdjectives(systemPrompt: string, prompt: string): Promise<string> {
+        try {
+            const response = await axios.post(
+                `${this.baseUrl}/chat/completions`,
+                {messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    model: this.model,
+                    temperature: 0.9,
+                    top_p: 0.9,
+                    presence_penalty: 0.75,
+                    frequency_penalty: 0.5,
+                },
+                {
+                    headers: {
+                        'accept': 'application/json',
+                        'content-type': 'application/json',
+                        'Authorization': `Bearer ${process.env.GAIA_API_KEY}`
+                    },
+                }
+            );
+
+            if (!response.data?.choices?.[0]?.message?.content) {
+                throw new Error('Invalid API response format');
+            }
+
+            return response.data.choices[0].message.content;
+
+        } catch (error) {
+            console.error('Error calling gaia', error);
+            throw error;
+        }
+    
 
 }
