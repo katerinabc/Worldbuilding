@@ -16,7 +16,13 @@
  */
 import { StringLiteral } from "typescript";
 
- 
+export interface StoryFlowResult {
+    success: boolean;
+    stage: number;
+    message: string;
+    hash: string | null;
+    error?: string;
+}
 
 export interface BotWebhook {
     subscription: {
@@ -133,8 +139,12 @@ export class StoryState {
 
     updateConversation(fid: number, updates: Partial<Conversation>) {
         const conversation = this.conversations.get(fid);
+        console.log('[DEBUG] Before update - Conversation state:', conversation);
         if (conversation) {
             Object.assign(conversation, updates);
+            console.log('[DEBUG] After update - Conversation state:', conversation);
+        } else {
+            console.log('[DEBUG] No conversation found for fid:', fid);
         }
     }
     

@@ -17,9 +17,8 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 import dotenv from 'dotenv';
 import { BotPosting } from '../writetofc';
 import { BotThinking } from '../botthinking';
-import { BotWebhook, WebhookEvent, StoryState } from './types';
+import { BotWebhook, WebhookEvent, StoryState, StoryFlowResult } from './types';
 import { Prompts } from '../prompts';
-import { isThisTypeNode } from 'typescript';
 import { FetchUserCasts } from '../feed';
 dotenv.config();
 
@@ -40,6 +39,7 @@ export class ListenBot {
         }
         this.apiKey = apiKey;
         this.storyState = StoryState.getInstance();
+        console.log('[DEBUG] StoryState instance:', this.storyState);
         this.botPosting = new BotPosting(); 
         this.botThinking = new BotThinking();
         this.prompt = new Prompts();
@@ -52,7 +52,7 @@ export class ListenBot {
         return 'default';
     }
 
-    private async handleStoryFlow(fid: number, hash: string, username: string) {
+    private async handleStoryFlow(fid: number, hash: string, username: string): Promise<StoryFlowResult> {
         const conversation = this.storyState.conversations.get(fid);
         console.log('[DEBUG] Current conversation state:', conversation);
 
@@ -66,8 +66,7 @@ export class ListenBot {
         console.log('[DEBUG] Current stage:', currentStage);
 
         // handle existing conversation
-        switch(currentStage) {
-            case 1:
+        if (currentStage === 1) {
                 try {
 
                 // stage 1: hard coded intro
@@ -80,17 +79,21 @@ export class ListenBot {
                 console.log('[TEST] botStoryPhase1 hash', botStoryPhase1)
                 
                 // update the stage we are in with the user
+                console.log('[DEBUG] Updating conversation state for fid:', fid);
                 this.storyState.updateConversation(fid,{
                     stage: 2,
                     hash: botStoryPhase1,
                     lastAttempt: new Date()
                 });
-                return {
-                    success: true,
-                    stage: 1,
-                    message: 'successfully posted story phase 1 & updated state',
-                    hash: botStoryPhase1
-                }
+
+                // Verify the update
+                const updatedConversation = this.storyState.conversations.get(fid);
+                console.log('[DEBUG] Conversation state after update:', updatedConversation);
+
+                // Continue to stage 2 immediately
+                console.log('[DEBUG] Continuing to stage 2');
+                return await this.handleStoryFlow(fid, botStoryPhase1, username);
+                
             } catch (error) {
                 console.error('[ERROR] botStoryPhase1', error);
                 return {
@@ -101,54 +104,63 @@ export class ListenBot {
                     error: error instanceof Error ? error.message : 'unknown error'
                 }
             }
+        }
                 
-            case 2: // come up with adjects and post them on farcaster
+        if (currentStage === 2) {
 
-                try {
-                // get casts from user
-                const userFeed = new FetchUserCasts(fid);
-                const userCasts = await userFeed.getUserCasts(10);
-                console.log('[TEST] userCasts', userCasts)
+            try {
+            // get casts from user
+            const userFeed = new FetchUserCasts(fid);
+            const userCasts = await userFeed.getUserCasts(10);
+            console.log('[TEST] userCasts', userCasts)
 
-                // give feed to botthinking
-                const worldBuildingPrompt = this.prompt.worldbuilding_user_prompt(userCasts)
+            // give feed to botthinking
+            const worldBuildingPrompt = this.prompt.worldbuilding_user_prompt(userCasts)
 
-                // get the adjectives via gaianet
-                const adjectives = await this.botThinking.callGaiaAdjectives(
-                    this.prompt.worldbuilding_system_prompt, 
-                    worldBuildingPrompt);
-                console.log('[TEST] adjectives', adjectives)
-                // reply with adjectives
-                const botReply = await this.botPosting.botSaysHi(adjectives, hash)
-                console.log('[TEST] botReply', botReply)
+            // get the adjectives via gaianet
+            const adjectives = await this.botThinking.callGaiaAdjectives(
+                this.prompt.worldbuilding_system_prompt, 
+                worldBuildingPrompt);
+            console.log('[TEST] adjectives', adjectives)
+            // reply with adjectives
+            const botReply = await this.botPosting.botSaysHi(adjectives, hash)
+            console.log('[TEST] botReply', botReply)
 
-                // update state (hash)
-                this.storyState.updateConversation(fid,{
-                    stage: 3,
-                    hash: botReply,
-                    lastAttempt: new Date()
-                });
-                return {
-                    success: true,
-                    stage: 3,
-                    message: 'successfully posted story phase 3 & updated state',
-                    hash: botReply
-                } 
+            // update state (hash)
+            this.storyState.updateConversation(fid,{
+                stage: 3,
+                hash: botReply,
+                lastAttempt: new Date()
+            });
+            return {
+                success: true,
+                stage: 3,
+                message: 'successfully posted story phase 3 & updated state',
+                hash: botReply
+            } 
 
-            }  catch (error) {
-                console.error('[ERROR] botStoryPhase1', error);
-                return {
-                    success: false, 
-                    stage: 1,
-                    message: 'error posting story phase 1',
-                    hash: null,
-                    error: error instanceof Error ? error.message : 'unknown error'
-                }
-            }                  
-            case 3:
+        }  catch (error) {
+            console.error('[ERROR] botStoryPhase1', error);
+            return {
+                success: false, 
+                stage: 1,
+                message: 'error posting story phase 1',
+                hash: null,
+                error: error instanceof Error ? error.message : 'unknown error'
+            }
+        }  
+        }                
+        if (currentStage === 3) {
                 const botReply = await this.botPosting.botSaysHi('nice one (yeah, still in testing mode', hash)
                 console.log('[TEST] botReply', botReply)          
         }
+    // Fallback for unknown stages
+    return {
+        success: false,
+        stage: currentStage,
+        message: 'unknown stage encountered',
+        hash: null
+    };
         
     }
 
