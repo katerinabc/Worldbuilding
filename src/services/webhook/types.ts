@@ -106,7 +106,19 @@ export interface Conversation {
 }
 
 export class StoryState {
+    // singleton pattern
+    // future errors when different people are using the bot?
+    private static instance: StoryState;
     public conversations: Map<number, Conversation> = new Map();
+
+    private constructor() {}
+
+    public static getInstance(): StoryState {
+        if (!StoryState.instance) {
+            StoryState.instance = new StoryState();
+        }
+        return StoryState.instance;
+    }
 
     startNewConversation(fid: number, hash: string, username: string) {
         this.conversations.set(fid, {

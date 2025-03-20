@@ -39,7 +39,7 @@ export class ListenBot {
             throw new Error('NEYNAR_API_KEY not found in env variables')
         }
         this.apiKey = apiKey;
-        this.storyState = new StoryState();
+        this.storyState = StoryState.getInstance();
         this.botPosting = new BotPosting(); 
         this.botThinking = new BotThinking();
         this.prompt = new Prompts();
@@ -219,16 +219,13 @@ export class ListenBot {
                         return botSaysHiResponse
                     
                     case 'story':
-                        return await this.handleStoryFlow(
+                        const result = await this.handleStoryFlow(
                             user_fid,
                             castHash,
                             user_name
                         );
-                        // Mark hash as replied only if successful
-                        // if (result.success) {
-                        //     this.repliedHashes.add(castHash);
-                        // }
-                        // return result;
+                        console.log('[DEBUG] Story flow result:', result);
+                        return result;
                     
                     default: 
                     try {
