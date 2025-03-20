@@ -303,7 +303,7 @@ export class ListenBot {
                     const user_name = event.data.author?.username;
                     
                     // Get current conversation state
-                    const conversation = this.storyState.conversations.get(user_fid);
+                    // const conversation = this.storyState.conversations.get(user_fid);
 
                     this.storyState.updateConversation(user_fid, {
                         stage: 3,
