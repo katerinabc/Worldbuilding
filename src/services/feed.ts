@@ -73,47 +73,73 @@ export class FetchUserCasts {
 export class FetchReply {
     private readonly apiKey: string;
     private readonly baseUrl: string = 'https://api.neynar.com/v2';
-    private targetUserId: number;
     private hash: string;
 
-    constructor(userId: number = 12021, hash: string) { //adding default value for userid for testing
+    constructor(hash: string) { //adding default value for userid for testing
         const apiKey = process.env.NEYNAR_API_KEY;
         if (!apiKey) {
             throw new Error('NEYNAR_API_KEY not found in environment variables');
         }
         this.apiKey = apiKey;
         this.hash = hash;
-        this.targetUserId = userId;
     }
 
     async getReplytoBot(): Promise<Cast> {
         try {
-            console.log('[DEBUG FEED] Fetching cast with hash:', this.hash);
-            console.log('[DEBUG FEED] Using API endpoint:', `${this.baseUrl}/farcaster/cast`);
-            console.log('[DEBUG FEED] API parameters:', {
+            const url = `${this.baseUrl}/farcaster/cast`;
+            const headers = {
+                accept: 'application/json',
+                'x-api-key': this.apiKey,
+            };
+            const params = {
                 identifier: this.hash,
-                type: 'hash'
+                type: 'hash',
+            };
+
+            // Log the complete request URL with parameters
+            const fullUrl = `${url}?${new URLSearchParams(params).toString()}`;
+            console.log('[API REQUEST]', {
+                method: 'GET',
+                url: fullUrl,
+                headers: {
+                    ...headers,
+                    'x-api-key': '***' // Mask the API key
+                }
             });
             
             const response: AxiosResponse<UserFeedResponse> = await axios.get(
-                `${this.baseUrl}/farcaster/cast`,
+                url,
                 {
-                    headers: {
-                        accept: 'application/json',
-                        'x-api-key': this.apiKey,
-                    },
-                    params: {
-                        identifier: this.hash,
-                        type: 'hash',
-                    }
+                    headers,
+                    params
                 }
             );
             
-            const replyCast = response.data.casts[0]
+            console.log('[API RESPONSE] Status:', response.status);
+            console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
+            
+            const replyCast = response.data.casts[0];
+            if (!replyCast) {
+                console.log('[API RESPONSE] No cast found in response');
+                throw new Error('No cast found in response');
+            }
+            
             return replyCast;
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
+                console.error('[API ERROR] Complete error details:', {
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    message: error.message,
+                    config: {
+                        url: error.config?.url,
+                        method: error.config?.method,
+                        headers: error.config?.headers,
+                        params: error.config?.params
+                    }
+                });
                 throw new Error(`Failed to fetch casts: ${error.message}`);
             }
             throw error;
