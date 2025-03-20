@@ -103,6 +103,5 @@ export class BotThinking {
             console.error('Error calling gaia', error);
             throw error;
         }
-    
-
+    }
 }
