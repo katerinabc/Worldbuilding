@@ -107,7 +107,7 @@ export class FetchReply {
                 }
             });
             
-            const response: AxiosResponse<UserFeedResponse> = await axios.get(
+            const response: AxiosResponse<Cast> = await axios.get(
                 url,
                 {
                     headers,
@@ -118,7 +118,7 @@ export class FetchReply {
             console.log('[API RESPONSE] Status:', response.status);
             console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
             
-            const replyCast = response.data.casts[0];
+            const replyCast = response.data;
             if (!replyCast) {
                 console.log('[API RESPONSE] No cast found in response');
                 throw new Error('No cast found in response');
