@@ -38,13 +38,15 @@ app.post('/', async (req: Request, res: Response) => {
 // I'm listening to post requests. that's why it's app.post
 app.post('/webhook', async (req: Request, res: Response) => {
     // Send response immediately to prevent timeout
+    console.log('[DEBUG server.ts] Received webhook request and sending a response to Neynar');
     res.status(200).send('OK');
     
     // Process webhook asynchronously
     try {
+        console.log('[DEBUG server.ts] Processing webhook request');
         await bot.handleWebhook(req.body);
     } catch (error) {
-        console.error('[WEBHOOK ERROR]', error);
+        console.error('[WEBHOOK ERROR server.ts]', error);
         // Note: We can't send error response here since we already sent the 200
     }
 });

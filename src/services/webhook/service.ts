@@ -237,12 +237,12 @@ export class ListenBot {
         console.log('Time:', new Date().toLocaleTimeString());
         // console.log('Full event:', JSON.stringify(event, null, 2));  
         // console.log('Console log event data', event.data)
-        console.log('[LOG HANDLE WBH] : ', event.type)
-        console.log('[LOG HANDLE WBH] : ', event.data.hash)
-        console.log('[LOG HANDLE WBH] : ', event.data.text)
-        console.log('[LOG HANDLE WBH] : ', event.data.author.fid)
-        console.log('[LOG HANDLE WBH] : ', event.data.mentioned_profiles)
-        console.log('[LOG HANDLE WBH] : ', event.data.parent_author?.fid)
+        console.log('[LOG WBH type] : ', event.type)
+        console.log('[LOG WBH hash] : ', event.data.hash)
+        console.log('[LOG WBH text] : ', event.data.text)
+        console.log('[LOG WBH author fid] : ', event.data.author?.fid)
+        console.log('[LOG WBH mentioned profiles] : ', event.data.mentioned_profiles)
+        console.log('[LOG WBH parent author fid] : ', event.data.parent_author?.fid)
         
          // Check if we've already replied to this hash
          if (this.repliedHashes.has(event.data.hash)) {
@@ -257,8 +257,8 @@ export class ListenBot {
             ) {
                 const stage = this.parseConversationStage(event.data.text);
                 const castHash = event.data.hash;
-                const user_name = event.data.author.username;
-                const user_fid = event.data.author.fid;
+                const user_name = event.data.author?.username;
+                const user_fid = event.data.author?.fid;
                 const user_cast = event.data.text
 
                 switch (stage) {
@@ -278,7 +278,7 @@ export class ListenBot {
                     default: 
                     try {
                         const defaultprompt = this.prompt.sayhiPrompt.replace('{user_name}', user_name)
-                        console.log('[TEST] defaultprompt', defaultprompt)
+                        // console.log('[TEST] defaultprompt', defaultprompt)
                         
                         const botreply = await this.botThinking.callGaiaDefault(user_cast, defaultprompt)
                         console.log('[TEST] botreply', botreply)
@@ -293,13 +293,14 @@ export class ListenBot {
 
         } 
         if (event.type === 'cast.created' && 
-            event.data.parent_author?.fid == 913741
+            event.data.parent_author?.fid == 913741 && // replies to bot
+            event.data.author?.fid != 913741 // not the bot's own cast (so the bot should reply to replies to it, but not reply to itself)
             ) { 
                 try {
-                    console.log('[LOG HANDLE WBH] : ', 'reply to bot detected')
-                    const user_fid = event.data.author.fid;
+                    console.log('[LOG HANDLE WBH] : ', 'reply to bot detected: ', event.data.text, ' by ', event.data.author?.username)
+                    const user_fid = event.data.author?.fid;
                     const castHash = event.data.hash;
-                    const user_name = event.data.author.username;
+                    const user_name = event.data.author?.username;
                     
                     // Get current conversation state
                     const conversation = this.storyState.conversations.get(user_fid);

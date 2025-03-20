@@ -88,12 +88,12 @@ export class FetchReply {
 
     async getReplytoBot(): Promise<Cast> {
         try {
-            // console.log('[DEBUG FEED] Fetching cast with hash:', this.hash);
-            // console.log('[DEBUG FEED] Using API endpoint:', `${this.baseUrl}/farcaster/cast`);
-            // console.log('[DEBUG FEED] API parameters:', {
-            //     identifier: this.hash,
-            //     type: 'hash'
-            // });
+            console.log('[DEBUG FEED] Fetching cast with hash:', this.hash);
+            console.log('[DEBUG FEED] Using API endpoint:', `${this.baseUrl}/farcaster/cast`);
+            console.log('[DEBUG FEED] API parameters:', {
+                identifier: this.hash,
+                type: 'hash'
+            });
             
             const response: AxiosResponse<UserFeedResponse> = await axios.get(
                 `${this.baseUrl}/farcaster/cast`,
