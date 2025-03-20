@@ -297,25 +297,27 @@ export class ListenBot {
             event.data.author?.fid != 913741 // not the bot's own cast (so the bot should reply to replies to it, but not reply to itself)
             ) { 
                 try {
-                    console.log('[LOG HANDLE WBH] : ', 'reply to bot detected: ', event.data.text, ' by ', event.data.author?.username)
+                    console.log('[LOG WBH] : ', 'reply to bot detected: ', event.data.text, ' by ', event.data.author?.username)
                     const user_fid = event.data.author?.fid;
                     const castHash = event.data.hash;
                     const user_name = event.data.author?.username;
                     
                     // Get current conversation state
                     const conversation = this.storyState.conversations.get(user_fid);
-                    
-                    // If we're in stage 2 and this is a reply to our message, move to stage 3
-                    // this is currently creating an error as we are at stage 1 everytime
-                    // the bot restarts
-                    if (conversation && conversation.stage === 2) {
-                        console.log('[DEBUG] Moving from stage 2 to 3 for reply');
-                        this.storyState.updateConversation(user_fid, {
-                            stage: 3,
-                            hash: castHash,
-                            lastAttempt: new Date()
-                        });
-                    }
+
+                    this.storyState.updateConversation(user_fid, {
+                        stage: 3,
+                        hash: castHash,
+                        lastAttempt: new Date()
+                    });                    
+                    // // If we're in stage 2 and this is a reply to our message, move to stage 3
+                    // // this is currently creating an error as we are at stage 1 everytime
+                    // // the bot restarts
+                    // if (conversation && conversation.stage === 2) {
+                    //     console.log('[DEBUG] Moving from stage 2 to 3 for reply');
+                        
+                    //     });
+                    // }
                     
                     // Continue the story flow with the reply
                     const result = await this.handleStoryFlow(
