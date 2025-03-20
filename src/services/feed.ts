@@ -46,18 +46,8 @@ export class FetchUserCasts {
                     }
                 );
 
-                // logging the response for debugging
-                console.log('Feed:API response:', {
-                    status: response.status,
-                    dataLength: response.data.casts.length,
-                    cursor: response.data.next?.cursor,
-                });
-
-
-
                 const newCasts = response.data.casts;
                 allCasts = [...allCasts, ...newCasts]
-                console.log(`Feed: Fetched ${newCasts.length} casts (Total: ${allCasts.length})`);
 
                 // check if we have more casts to fetch
                 cursor = response.data.next?.cursor;
@@ -69,7 +59,6 @@ export class FetchUserCasts {
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
-            console.log(`Feed: completed fetching ${allCasts.length} total casts`);
             return allCasts;
 
         } catch (error) {
@@ -97,24 +86,17 @@ export class FetchReply {
         this.targetUserId = userId;
     }
 
-    /**
-     * Fetch casts by the user
-     */
     async getReplytoBot(): Promise<Cast> {
         try {
-            console.log('[DEBUG FEED] Fetching cast with hash:', this.hash);
-            console.log('[DEBUG FEED] Using API endpoint:', `${this.baseUrl}/farcaster/feed/cast`);
-            console.log('[DEBUG FEED] API parameters:', {
-                identifier: this.hash,
-                type: 'hash'
-            });
-            console.log('[DEBUG FEED] API headers:', {
-                accept: 'application/json',
-                'x-api-key': this.apiKey.substring(0, 4) + '...' // Only log first 4 chars of API key
-            });
+            // console.log('[DEBUG FEED] Fetching cast with hash:', this.hash);
+            // console.log('[DEBUG FEED] Using API endpoint:', `${this.baseUrl}/farcaster/cast`);
+            // console.log('[DEBUG FEED] API parameters:', {
+            //     identifier: this.hash,
+            //     type: 'hash'
+            // });
             
             const response: AxiosResponse<UserFeedResponse> = await axios.get(
-                `${this.baseUrl}/farcaster/feed/cast`,
+                `${this.baseUrl}/farcaster/cast`,
                 {
                     headers: {
                         accept: 'application/json',
@@ -126,32 +108,12 @@ export class FetchReply {
                     }
                 }
             );
-
-            // logging the response for debugging
-            console.log('[DEBUG FEED] API response:', {
-                status: response.status,
-                statusText: response.statusText,
-                data: response.data
-            });
             
             const replyCast = response.data.casts[0]
-
-            console.log(`[DEBUG FEED] Got cast:`, {
-                text: replyCast.text,
-                hash: replyCast.hash,
-                author: replyCast.author.username
-            });
-            
             return replyCast;
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                console.error('[DEBUG FEED] API Error:', {
-                    status: error.response?.status,
-                    statusText: error.response?.statusText,
-                    data: error.response?.data,
-                    message: error.message
-                });
                 throw new Error(`Failed to fetch casts: ${error.message}`);
             }
             throw error;

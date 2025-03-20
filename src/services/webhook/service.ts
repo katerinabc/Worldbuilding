@@ -39,7 +39,6 @@ export class ListenBot {
         }
         this.apiKey = apiKey;
         this.storyState = StoryState.getInstance();
-        console.log('[DEBUG] StoryState instance:', this.storyState);
         this.botPosting = new BotPosting(); 
         this.botThinking = new BotThinking();
         this.prompt = new Prompts();
@@ -54,16 +53,13 @@ export class ListenBot {
 
     private async handleStoryFlow(fid: number, hash: string, username: string): Promise<StoryFlowResult> {
         const conversation = this.storyState.conversations.get(fid);
-        console.log('[DEBUG] Current conversation state:', conversation);
 
         if (!conversation) {
             // New story conversation
             this.storyState.startNewConversation(fid, hash, username);
-            console.log('[DEBUG] Started new conversation for fid:', fid);
         }
 
         const currentStage = conversation ? conversation.stage : 1;
-        console.log('[DEBUG] Current stage:', currentStage);
 
         // handle existing conversation
         if (currentStage === 1) {
@@ -76,10 +72,8 @@ export class ListenBot {
                 // const botreply = await botThinking.callGaiaDefault(user_cast, storystart)
                 // console.log('[TEST] STORY PHASE 1', botreply)
                 const botStoryPhase1 = await this.botPosting.botSaysHi(this.storyPhase1(), hash)
-                console.log('[TEST] botStoryPhase1 hash', botStoryPhase1)
                 
                 // update the stage we are in with the user
-                console.log('[DEBUG] Updating conversation state for fid:', fid);
                 this.storyState.updateConversation(fid,{
                     stage: 2,
                     hash: botStoryPhase1,
@@ -91,7 +85,6 @@ export class ListenBot {
                 console.log('[DEBUG] Conversation state after update:', updatedConversation);
 
                 // Continue to stage 2 immediately
-                console.log('[DEBUG] Continuing to stage 2');
                 return await this.handleStoryFlow(fid, botStoryPhase1, username);
                 
             } catch (error) {
@@ -111,7 +104,7 @@ export class ListenBot {
                 // get casts from user
                 const userFeed = new FetchUserCasts(fid);
                 const userCasts = await userFeed.getUserCasts(10);
-                console.log('[TEST] userCasts', userCasts[0].text.slice(0, 1))
+                
 
                 // give feed to botthinking
                 const worldBuildingPrompt = this.prompt.worldbuilding_user_prompt(userCasts)
@@ -124,7 +117,6 @@ export class ListenBot {
                 
                 // reply with adjectives
                 const botReply = await this.botPosting.botSaysHi(adjectives, hash)
-                console.log('[TEST] botReply stage 2', botReply)
 
                 // update state (hash) but stay in stage 2
                 this.storyState.updateConversation(fid,{
@@ -166,7 +158,7 @@ export class ListenBot {
                     }
                 }
 
-                console.log('[TEST] replyCast', replyCast, replyCast.hash)
+                console.log('[TEST] Getting the hash to the bot s cast the user replied to', replyCast, replyCast.hash)
 
                 // update state (hash)
                 this.storyState.updateConversation(fid,{
@@ -254,7 +246,7 @@ export class ListenBot {
         
          // Check if we've already replied to this hash
          if (this.repliedHashes.has(event.data.hash)) {
-            console.log('Already replied to this hash:', event.data.hash);
+            console.log('Already replied to hash:', event.data.hash);
             return;
         }
 
@@ -262,7 +254,6 @@ export class ListenBot {
             event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
             event.data.author.fid != 913741 &&
             event.data.parent_author?.fid != 913741
-
             ) {
                 const stage = this.parseConversationStage(event.data.text);
                 const castHash = event.data.hash;
@@ -298,9 +289,6 @@ export class ListenBot {
                         console.error('Error in default case', error)
                         return await this.botPosting.botSaysHi("nothing working. come back later plz. @kbc error here", castHash)
                     }
-
-                        
-                        
                 }
 
         } 
@@ -352,7 +340,6 @@ export class ListenBot {
         }
     // After successfully posting a reply, mark the hash as replied
     this.repliedHashes.add(event.data.hash);
-
     }
 
 
