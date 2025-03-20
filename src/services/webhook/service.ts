@@ -147,6 +147,7 @@ export class ListenBot {
                 // get reply to previous cast
                 const replytoBot = new FetchReply(hash)
                 const replyCast = await replytoBot.getReplytoBot()
+    
                 
                 if (!replyCast) {
                     // No reply yet, stay in stage 3
@@ -158,7 +159,7 @@ export class ListenBot {
                     }
                 }
 
-                console.log('[TEST] Getting the hash to the bot s cast the user replied to', replyCast, replyCast.hash)
+                console.log('[TEST] Getting the hash to the bot s cast the user replied to', replyCast)
 
                 // update state (hash)
                 this.storyState.updateConversation(fid,{
