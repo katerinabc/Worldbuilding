@@ -223,42 +223,6 @@ export class ListenBot {
         
     }
 
-    // async createWebhook(): Promise<void> {
-    //     try {
-    //         const response:AxiosResponse<BotWebhook> = await axios.post(
-    //         `${this.baseUrl}/farcaster/webhook`,
-    //         {   // Data object
-    //             subscription: {'cast.created': {mentioned_fids: [913741], parent_author_fids: [913741]}},
-    //             name: 'mentionbot',
-    //             url: 'https://webhook.netnigma.io/webhook'
-    //         },
-    //         {   // Config object (including headers)
-    //             headers: {
-    //                 accept: 'application/json',
-    //                 'content-type': 'application/json',
-    //                 'x-api-key': this.apiKey
-    //             }
-    //         }
-    //     );
-        
-    //     // Add success logging
-    //     console.log('service: Webhook created successfully:', {
-    //         status: response.status,
-    //         data: response.data
-    //     });
-
-    //     } catch(error: unknown) {
-    //         if (axios.isAxiosError(error)) {
-    //             console.error('Webhook API error:', {
-    //                 message: error.message,
-    //                 details: error.response?.data
-    //             });
-    //         } else {
-    //             console.error('Unknown error:', error);
-    //         }
-    //     }
-    // }
-
     async handleWebhook(event: WebhookEvent) {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
@@ -331,7 +295,7 @@ export class ListenBot {
                     const user_name = event.data.author?.username;
                     const user_cast = event.data.text
                     
-                    // Get current conversation state
+                    // check text if it mentions register/ Story protocol or if another person has been mentioned. 
                     // const conversation = this.storyState.conversations.get(user_fid);
 
                     this.storyState.jumpintoConveration(user_fid, {
@@ -379,26 +343,28 @@ export class ListenBot {
 
 
     private defaultPoem() {
-        return `Wo der Abend unmerklich/
-                wie man so sagt ohne/
-                Umschweife sagst du //
-                in die Nach übergeht/
-                Ist meine Zeit/
-                Ist mein Ort. Dort //
-                lebe ich einsam bei mir/
-                sage ich und du sagst: //
-                ich bin auch noch da.
+        return `Wo der Abend unmerklich\n
+                wie man so sagt ohne\n
+                Umschweife sagst du\n
+
+                in die Nach übergeht\n
+                Ist meine Zeit\n
+                Ist mein Ort. Dort\n
+
+                lebe ich einsam bei mir\n
+                sage ich und du sagst:\n
+                ich bin auch noch da.\n
+
                 - Steffen Jacobs, Sprechstück`;
-    
             }
 
     private storyPhase1() {
-        return `Ley's play. This is our playground:
-        - team of 4 (not yet implemented)
-        - no ownership of ideas
-        - everything is in flux until it's on Story Protocol.
+        return `Ley's play. This is our playground: \n
+        - team of 4 (not yet implemented) \n
+        - no ownership of ideas \n
+        - everything is in flux until it's on Story Protocol. \n
 
-        Step 1: Foundation
+        Step 1: Foundation \n
         @kbc believes unconscious ideas are embedded in writing. With all the data you put out, this is scary but serves us well now. Give me a 42 seconds to "get you". Use that time to "get me".
         `
     }
