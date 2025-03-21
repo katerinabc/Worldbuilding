@@ -294,7 +294,8 @@ export class ListenBot {
                         const result = await this.handleStoryFlow(
                             user_fid,
                             castHash,
-                            user_name
+                            user_name,
+                            user_cast
                         );
                         console.log('[DEBUG] Story flow result:', result);
                         return result;
