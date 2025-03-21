@@ -148,6 +148,7 @@ export class FetchReply {
 
     async getThreadSummary(): Promise<Cast[]> {
         try {
+            console.log('[LOG] Getting thread summary for hash:', this.hash);
             const url = `${this.baseUrl}/farcaster/cast/conversation`;
             const headers = {
                 accept: 'application/json',
@@ -188,7 +189,7 @@ export class FetchReply {
             console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
 
             // return thread summary as an array of casts
-            const threadCasts = response.data.casts;
+            const threadCasts = [response.data.conversation.cast, ...response.data.conversation.direct_replies];
             console.log('[LOG] threadCasts', threadCasts)
             return threadCasts;
 

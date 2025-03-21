@@ -160,8 +160,8 @@ export class ListenBot {
                 //     }
                 // }
                 // console.log('[TEST] Getting the hash to the bot s cast the user replied to', replyCast.cast.hash, replyCast.cast.text)
-                console.log('[LOG stage 3] user cast', user_cast)
-                console.log('[LOG stage 3] user hash', hash)
+                console.log('[LOG stage 3] user cast:', user_cast)
+                console.log('[LOG stage 3] user hash:', hash)
 
                 // get the thread summary
                 const replytoBot = new FetchReply(hash)

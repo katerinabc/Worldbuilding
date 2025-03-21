@@ -122,7 +122,13 @@ export interface UserFeedResponse {
 } 
 
 export interface ThreadSummaryResponse {
-    casts: Cast[];
+    conversation: {
+        cast: Cast;
+        direct_replies: Cast[];
+    };
+    next: {
+        cursor: string | null;
+    };
 } 
 
 export interface FetchSingleCast {
