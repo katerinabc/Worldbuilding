@@ -167,6 +167,9 @@ export class ListenBot {
                 const replytoBot = new FetchReply(hash)
                 const threadSummaryText = await replytoBot.getThreadSummary()
                 console.log('[LOG stage 3] Getting the thread summary', threadSummaryText)
+                console.log('[LOG stage 3] Thread summary type:', typeof threadSummaryText)
+                console.log('[LOG stage 3] Is thread summary an array?', Array.isArray(threadSummaryText))
+                console.log('[LOG stage 3] Thread summary length:', threadSummaryText?.length)
 
                 // Gaianet: add to the story (prompting LLM)
                 const worldBuildingPrompt = this.prompt.worldbuilding_storywriting(

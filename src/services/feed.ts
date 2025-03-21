@@ -188,8 +188,20 @@ export class FetchReply {
             console.log('[API RESPONSE] Status:', response.status);
             console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
 
+            // Add defensive checks and logging
+            console.log('[LOG] Conversation object:', response.data.conversation);
+            console.log('[LOG] Direct replies:', response.data.conversation.direct_replies);
+            console.log('[LOG] Is direct_replies an array?', Array.isArray(response.data.conversation.direct_replies));
+
+            // Safely handle the direct_replies array
+            const directReplies = Array.isArray(response.data.conversation.direct_replies) 
+                ? response.data.conversation.direct_replies 
+                : [];
+
             // return thread summary as an array of casts
-            const threadCasts = [response.data.conversation.cast, ...response.data.conversation.direct_replies];
+            console.log('[LOG] response.data.conversation.cast', response.data.conversation.cast)
+            console.log('[LOG] response.data.conversation.direct_replies', response.data.conversation.direct_replies)
+            const threadCasts = [response.data.conversation.cast, ...(response.data.conversation.direct_replies || [])];
             console.log('[LOG] threadCasts', threadCasts)
             return threadCasts;
 
