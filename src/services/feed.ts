@@ -147,25 +147,68 @@ export class FetchReply {
     }
 
     async getThreadSummary(): Promise<Cast[]> {
-        const response: AxiosResponse<ThreadSummaryResponse> = await axios.get(
-            `${this.baseUrl}/farcaster/cast/conversation`,
-            {
-                headers: {
-                    accept: 'application/json',
-                    'x-api-key': this.apiKey,
-                },
-                params: {
-                    identifier: this.hash,
-                    type: 'hash',
-                    reply_depth: 3, // default 2 range 1-5
-                    fold: 'above', //filter out replies below the fold (spammy)
-                    limit: 20 // default 20
-                }
-            }
-        );
+        try {
+            const url = `${this.baseUrl}/farcaster/cast/conversation`;
+            const headers = {
+                accept: 'application/json',
+                'x-api-key': this.apiKey,
+            };
+            const params = {
+                identifier: this.hash,
+                type: 'hash',
+                reply_depth: 3, // default 2 range 1-5
+                fold: 'above', //filter out replies below the fold (spammy)
+                limit: 20 // default 20
+            };
 
-        // return thread summary as an array of casts
-        const threadCasts = response.data.casts;
-        return threadCasts
+            // log complete url
+            const fullURl = `${url}?${new URLSearchParams({
+                ...params,
+                reply_depth: params.reply_depth.toString(),
+                limit: params.limit.toString()
+            })}`;
+            console.log('[API REQUEST]', {
+                method: 'GET',
+                url: fullURl,
+                headers: {
+                    ...headers,
+                    'x-api-key': '***' // Mask the API key
+                }
+            });
+
+            const response: AxiosResponse<ThreadSummaryResponse> = await axios.get(
+                url,
+                {
+                    headers,
+                    params
+                }
+            );
+            
+            console.log('[API RESPONSE] Status:', response.status);
+            console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
+
+            // return thread summary as an array of casts
+            const threadCasts = response.data.casts;
+            console.log('[LOG] threadCasts', threadCasts)
+            return threadCasts;
+
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error('[API ERROR] Complete error details:', {
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    message: error.message,
+                    config: {
+                        url: error.config?.url,
+                        method: error.config?.method,
+                        headers: error.config?.headers,
+                        params: error.config?.params
+                    }
+                });
+                throw new Error(`Failed to fetch thread summary: ${error.message}`);
+            }
+            throw error;
+        }
     }
 }
