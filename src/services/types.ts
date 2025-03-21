@@ -121,6 +121,10 @@ export interface UserFeedResponse {
     };
 } 
 
+export interface ThreadSummaryResponse {
+    casts: Cast[];
+} 
+
 export interface FetchSingleCast {
     cast: Cast;
 }

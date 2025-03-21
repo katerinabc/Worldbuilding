@@ -79,10 +79,53 @@ export class BotThinking {
                         }
                     ],
                     model: this.model,
-                    temperature: 0.9,
+                    temperature: 0.3,
                     top_p: 0.9,
-                    presence_penalty: 0.75,
-                    frequency_penalty: 0.5,
+                    top_k: 10,
+                    presence_penalty: 0.9,
+                    frequency_penalty: 0.9,
+                },
+                {
+                    headers: {
+                        'accept': 'application/json',
+                        'content-type': 'application/json',
+                        'Authorization': `Bearer ${process.env.GAIA_API_KEY}`
+                    },
+                }
+            );
+
+            if (!response.data?.choices?.[0]?.message?.content) {
+                throw new Error('Invalid API response format');
+            }
+
+            return response.data.choices[0].message.content;
+
+        } catch (error) {
+            console.error('Error calling gaia', error);
+            throw error;
+        }
+    }
+
+    public async callGaiaStorywriting(sysPrompt: string, userPrompt: string): Promise<string> {
+        try {
+            const response = await axios.post(
+                `${this.baseUrl}/chat/completions`,
+                {messages: [
+                        {
+                            role: 'system',
+                            content: sysPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: userPrompt
+                        }
+                    ],
+                    model: this.model,
+                    temperature: 0.75,
+                    top_p: 0.9,
+                    top_k: 20,
+                    presence_penalty: 0.65,
+                    frequency_penalty: 0.65,
                 },
                 {
                     headers: {

@@ -107,7 +107,7 @@ export class ListenBot {
                 
 
                 // give feed to botthinking
-                const worldBuildingPrompt = this.prompt.worldbuilding_user_prompt(userCasts)
+                const worldBuildingPrompt = this.prompt.worldbuilding_adjectives(userCasts)
 
                 // get the adjectives via gaianet
                 const adjectives = await this.botThinking.callGaiaAdjectives(
@@ -142,13 +142,13 @@ export class ListenBot {
                 }
             }
         }                
-        if (currentStage === 3) {// the users story attempt 1
+        if (currentStage === 3) {
+            // get the users story attempt 1 and add to it. 
             try {
                 // get reply to previous cast
                 const replytoBot = new FetchReply(hash)
                 const replyCast = await replytoBot.getReplytoBot()
-    
-                
+
                 if (!replyCast) {
                     // No reply yet, stay in stage 3
                     return {
@@ -158,8 +158,25 @@ export class ListenBot {
                         hash: hash
                     }
                 }
-
                 console.log('[TEST] Getting the hash to the bot s cast the user replied to', replyCast)
+
+                // get the thread summary
+                const threadSummaryText = await replytoBot.getThreadSummary()
+                console.log('[TEST] Getting the thread summary', threadSummaryText)
+
+                // Gaianet: add to the story (prompting LLM)
+                const worldBuildingPrompt = this.prompt.worldbuilding_storywriting(
+                    // this creates the prompt combinign the general prompt text with input from the user
+                    // it needs the user's story (cast) and the thread summary
+                    replyCast.cast.text, 
+                    threadSummaryText)
+                const botStory = await this.botThinking.callGaiaStorywriting(
+                    // this calls the LLM with the prompt
+                    this.prompt.worldbuilding_system_prompt,
+                    worldBuildingPrompt)
+
+                // post the reply. 
+                const botReply = await this.botPosting.botSaysHi(botStory, replyCast.cast.hash)
 
                 // update state (hash)
                 this.storyState.updateConversation(fid,{
@@ -168,8 +185,12 @@ export class ListenBot {
                     lastAttempt: new Date()
                 });
 
-                // Continue to stage 4
-                return await this.handleStoryFlow(fid, replyCast.cast.hash, username);
+                return {
+                    success: true,
+                    stage: 3,
+                    message: 'bot replied to user with story',
+                    hash: replyCast.cast.hash
+                } 
 
             } catch (error) {
                 console.error('[ERROR] in stage 3:', error);
@@ -183,10 +204,7 @@ export class ListenBot {
             }
         }
 
-        if (currentStage === 4) {// reply with nice one
-                const botReply = await this.botPosting.botSaysHi('nice one (yeah, still in testing mode', hash)
-                console.log('[TEST] botReply', botReply)          
-        }
+        
     // Fallback for unknown stages
     return {
         success: false,
@@ -363,14 +381,14 @@ export class ListenBot {
             }
 
     private storyPhase1() {
-        return `
-        Ley's play. This is our playground
+        return `Ley's play. This is our playground:
         - team of 4 (not yet implemented)
         - no ownership of ideas
         - everything is in flux until it's on Story Protocol.
 
         Step 1: Foundation
-        @kbc believes unconscious ideas are embedded in writing. With all the data you put out, this is scary but serves us well now. Give me a 42 seconds to "get you". Use that time to "get me".`
+        @kbc believes unconscious ideas are embedded in writing. With all the data you put out, this is scary but serves us well now. Give me a 42 seconds to "get you". Use that time to "get me".
+        `
     }
 
 

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { AxiosResponse } from 'axios';
 import dotenv from 'dotenv';
-import { Cast, FetchSingleCast, UserFeedResponse } from './types';
+import { Cast, FetchSingleCast, ThreadSummaryResponse, UserFeedResponse } from './types';
 
 dotenv.config();
 
@@ -144,5 +144,28 @@ export class FetchReply {
             }
             throw error;
         }
+    }
+
+    async getThreadSummary(): Promise<Cast[]> {
+        const response: AxiosResponse<ThreadSummaryResponse> = await axios.get(
+            `${this.baseUrl}/farcaster/cast/conversation`,
+            {
+                headers: {
+                    accept: 'application/json',
+                    'x-api-key': this.apiKey,
+                },
+                params: {
+                    identifier: this.hash,
+                    type: 'hash',
+                    reply_depth: 3, // default 2 range 1-5
+                    fold: 'above', //filter out replies below the fold (spammy)
+                    limit: 20 // default 20
+                }
+            }
+        );
+
+        // return thread summary as an array of casts
+        const threadCasts = response.data.casts;
+        return threadCasts
     }
 }
