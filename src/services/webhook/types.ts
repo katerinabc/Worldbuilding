@@ -107,8 +107,10 @@ export interface Conversation {
     hash: string;
     username: string;
     fid: number;
+    usercast: string;
     retries: number;
     lastAttempt: Date;
+    
 }
 
 export class StoryState {
@@ -132,6 +134,7 @@ export class StoryState {
             hash,
             username,
             fid,
+            usercast: '',
             retries: 0,
             lastAttempt: new Date()
         });
@@ -154,6 +157,7 @@ export class StoryState {
             stage: 3,
             hash: updates.hash || '',
             username: updates.username || '',
+            usercast: updates.usercast || '',
             fid: fid,
             retries: updates.retries || 0,
             lastAttempt: updates.lastAttempt || new Date()

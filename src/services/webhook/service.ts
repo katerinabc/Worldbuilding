@@ -51,7 +51,7 @@ export class ListenBot {
         return 'default';
     }
 
-    private async handleStoryFlow(fid: number, hash: string, username: string): Promise<StoryFlowResult> {
+    private async handleStoryFlow(fid: number, hash: string, username: string, user_cast: string): Promise<StoryFlowResult> {
         const conversation = this.storyState.conversations.get(fid);
 
         if (!conversation) {
@@ -77,6 +77,7 @@ export class ListenBot {
                 this.storyState.updateConversation(fid,{
                     stage: 2,
                     hash: botStoryPhase1,
+                    usercast: this.storyPhase1(),
                     lastAttempt: new Date()
                 });
 
@@ -85,7 +86,7 @@ export class ListenBot {
                 console.log('[DEBUG] Conversation state after update:', updatedConversation);
 
                 // Continue to stage 2 immediately
-                return await this.handleStoryFlow(fid, botStoryPhase1, username);
+                return await this.handleStoryFlow(fid, botStoryPhase1, username, this.storyPhase1());
                 
             } catch (error) {
                 console.error('[ERROR] botStoryPhase1', error);
@@ -122,6 +123,7 @@ export class ListenBot {
                 this.storyState.updateConversation(fid,{
                     stage: 2,  // Stay in stage 2
                     hash: botReply,
+                    usercast: adjectives,
                     lastAttempt: new Date()
                 });
                 return {
@@ -146,29 +148,31 @@ export class ListenBot {
             // get the users story attempt 1 and add to it. 
             try {
                 // get reply to previous cast
-                const replytoBot = new FetchReply(hash)
-                const replyCast = await replytoBot.getReplytoBot()
+                // const replyCast = await replytoBot.getReplytoBot()
 
-                if (!replyCast) {
-                    // No reply yet, stay in stage 3
-                    return {
-                        success: true,
-                        stage: 3,
-                        message: 'waiting for user reply',
-                        hash: hash
-                    }
-                }
-                console.log('[TEST] Getting the hash to the bot s cast the user replied to', replyCast)
+                // if (!replyCast) {
+                //     // No reply yet, stay in stage 3
+                //     return {
+                //         success: true,
+                //         stage: 3,
+                //         message: 'waiting for user reply',
+                //         hash: hash
+                //     }
+                // }
+                // console.log('[TEST] Getting the hash to the bot s cast the user replied to', replyCast.cast.hash, replyCast.cast.text)
+                console.log('[LOG stage 3] user cast', user_cast)
+                console.log('[LOG stage 3] user hash', hash)
 
                 // get the thread summary
+                const replytoBot = new FetchReply(hash)
                 const threadSummaryText = await replytoBot.getThreadSummary()
-                console.log('[TEST] Getting the thread summary', threadSummaryText)
+                console.log('[LOG stage 3] Getting the thread summary', threadSummaryText)
 
                 // Gaianet: add to the story (prompting LLM)
                 const worldBuildingPrompt = this.prompt.worldbuilding_storywriting(
                     // this creates the prompt combinign the general prompt text with input from the user
                     // it needs the user's story (cast) and the thread summary
-                    replyCast.cast.text, 
+                    user_cast, 
                     threadSummaryText)
                 const botStory = await this.botThinking.callGaiaStorywriting(
                     // this calls the LLM with the prompt
@@ -176,12 +180,13 @@ export class ListenBot {
                     worldBuildingPrompt)
 
                 // post the reply. 
-                const botReply = await this.botPosting.botSaysHi(botStory, replyCast.cast.hash)
+                const botReply = await this.botPosting.botSaysHi(botStory, hash)
 
                 // update state (hash)
                 this.storyState.updateConversation(fid,{
                     stage: 4,
-                    hash: replyCast.cast.hash,
+                    hash: hash,
+                    usercast: botStory,
                     lastAttempt: new Date()
                 });
 
@@ -189,7 +194,7 @@ export class ListenBot {
                     success: true,
                     stage: 3,
                     message: 'bot replied to user with story',
-                    hash: replyCast.cast.hash
+                    hash: hash
                 } 
 
             } catch (error) {
@@ -320,6 +325,7 @@ export class ListenBot {
                     const user_fid = event.data.author?.fid;
                     const castHash = event.data.hash;
                     const user_name = event.data.author?.username;
+                    const user_cast = event.data.text
                     
                     // Get current conversation state
                     // const conversation = this.storyState.conversations.get(user_fid);
@@ -328,6 +334,7 @@ export class ListenBot {
                         stage: 3,
                         hash: castHash,
                         username: user_name,
+                        usercast: user_cast,
                         lastAttempt: new Date()
                     });                    
                     // // If we're in stage 2 and this is a reply to our message, move to stage 3
@@ -343,7 +350,8 @@ export class ListenBot {
                     const result = await this.handleStoryFlow(
                         user_fid,
                         castHash,
-                        user_name
+                        user_name,
+                        user_cast
                     );
                     console.log('[DEBUG] Story flow result from reply:', result);
                     return result;
