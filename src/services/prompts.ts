@@ -93,7 +93,10 @@ export class Prompts {
         Output: The ouput is a text reply to the user containing your output and instruction to the user
         Output 1: Your part of the story.
         Output 2: Instruction to the user.
-        
+
+        Structure your output as follows:
+        {story}
+        {instruction}
 
         Guidelines:
         - Your reply will contain your output and the instruction to the user.
@@ -107,6 +110,7 @@ export class Prompts {
         - If the user opened a story gap, you can decide to close it. 
         - You can add to any elements that has been mentioned before. Use input 1 and input 2 to know what has been included in the story so far. 
         - You can not delete landmarks or entities. But they can die, decay, disappear or be destroyed. THey can also be revived. 
+        - Do not include in your reply the words "Output 1" or "Output 2", just the story and the instruction.
         `
     }
 }
