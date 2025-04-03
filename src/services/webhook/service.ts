@@ -264,20 +264,23 @@ export class ListenBot {
         console.log('\n🤖 Bot Processing Webhook:');
         console.log('Time:', new Date().toLocaleTimeString());
         // console.log('Full event:', JSON.stringify(event, null, 2));  
-        // console.log('Console log event data', event.data)
-        console.log('[LOG WBH type] : ', event.type)
-        console.log('[LOG WBH hash] : ', event.data.hash)
-        console.log('[LOG WBH text] : ', event.data.text)
-        console.log('[LOG WBH author fid] : ', event.data.author?.fid)
-        console.log('[LOG WBH mentioned profiles] : ', event.data.mentioned_profiles)
-        console.log('[LOG WBH parent author fid] : ', event.data.parent_author?.fid)
+        console.log('Console log event data', event.data)
+        // console.log('[LOG WBH type] : ', event.type)
+        // console.log('[LOG WBH hash] : ', event.data.hash)
+        // console.log('[LOG WBH text] : ', event.data.text)
+        // console.log('[LOG WBH author fid] : ', event.data.author?.fid)
+        // console.log('[LOG WBH mentioned profiles] : ', event.data.mentioned_profiles)
+        // console.log('[LOG WBH parent author fid] : ', event.data.parent_author?.fid)
+        // console.log('[LOG WBH parent hash] : ', event.data.parent_hash)
+        // console.log('[LOG WBH thread hash] : ', event.data.thread_hash)
 
         const conversation = this.storyState.conversations.get(event.data.author?.fid)
         const coAuthors = conversation?.coauthorFid
         console.log('[LOG WBH coauthors] : ', coAuthors)
 
+        // this will only work if ongoing conversation. not if time has passed
         const parent_hash = conversation?.parent_hash
-        console.log('[LOG WBH parent hash] : ', parent_hash)
+        console.log('[LOG WBH parent hash from conversation] : ', parent_hash)
 
          // Check if we've already replied to this hash
          if (this.repliedHashes.has(event.data.hash)) {
