@@ -364,6 +364,7 @@ export class ListenBot {
                             usercast: user_cast,
                             lastAttempt: new Date()
                         });
+                    }
                     
                     // Continue the story flow with the reply
                     const result = await this.handleStoryFlow(
@@ -375,7 +376,7 @@ export class ListenBot {
 
                     console.log('[DEBUG] Story flow result from reply:', result);
                     return result;
-                     }
+                     
                 } catch (error) {
                     console.error('[ERROR] handling reply:', error);
                     return await this.botPosting.botSaysHi("nothing working. come back later plz. @kbc error here", event.data.hash)
