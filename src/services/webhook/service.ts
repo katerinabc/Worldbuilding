@@ -290,11 +290,13 @@ export class ListenBot {
 
         // level 1: The bot is mentioned in a cast for the first time.
         // TODO: add limit that mentioned_profiles can only be lenght = 1?
+        // TODO: add an orchestrator agent before default. 
         if (event.type === 'cast.created' && 
             event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
             event.data.author.fid != 913741 &&
             event.data.parent_author?.fid != 913741
             ) {
+                console.log('[LOG WBH]: Level 1: initialization of story')
                 const stage = this.parseConversationStage(event.data.text);
                 const castHash = event.data.hash;
                 const user_name = event.data.author?.username;
@@ -342,6 +344,7 @@ export class ListenBot {
             event.data.author?.fid != 913741 // not the bot's own cast (so the bot should reply to replies to it, but not reply to itself)
             ) { 
                 try {
+                    console.log('[LOG WBH]: Level 3: single player mode')
                     console.log('[LOG WBH] : ', 'reply from ', event.data.author?.username, 'detected, casting ', event.data.text)
                     console.log('[LOG WBH] : ', 'reply from ', event.data.author?.username, ' mentioned profiles ', event.data.mentioned_profiles)
                     const user_fid = event.data.author?.fid;
@@ -389,6 +392,7 @@ export class ListenBot {
             event.data.mentioned_profiles?.some(profile => coAuthors?.includes(profile.fid))
         ) { 
             try {
+                console.log('[LOG WBH]: Level 4: multi player mode')
                 console.log('[TEST] parent hash', event.data.parent_hash)
                 console.log('[TEST] parent hash', parent_hash)
                 console.log('[TEST] thread hash', event.data.thread_hash)
