@@ -20,6 +20,8 @@ import { BotThinking } from '../botthinking';
 import { BotWebhook, WebhookEvent, StoryState, StoryFlowResult } from './types';
 import { Prompts } from '../prompts';
 import { FetchReply, FetchUserCasts } from '../feed';
+import { WebhookManager } from './manager'
+import { Cast } from '../types';
 dotenv.config();
 
 export class ListenBot {
@@ -30,6 +32,8 @@ export class ListenBot {
     private readonly botThinking: BotThinking;  
     private readonly prompt: Prompts; 
     private repliedHashes: Set<string> = new Set();  // Track all hashes we've replied to
+    private authors: Set<number> = new Set(); // track all authors
+    // private user_fid: number;// not sure we still need this
           
 
     constructor() {
@@ -99,7 +103,8 @@ export class ListenBot {
                 }
             }
         }
-                
+        
+        // story initialization stage
         if (currentStage === 2) {
             try {
                 // get casts from user
@@ -143,9 +148,11 @@ export class ListenBot {
                     error: error instanceof Error ? error.message : 'unknown error'
                 }
             }
-        }                
+        }    
+        // single player mode
+        // user and bot make a story together. Ends with new webhook for adding new coauthors.
+        // no limit to coauthors right now.              
         if (currentStage === 3) {
-            // get the users story attempt 1 and add to it. 
             try {
                 // get reply to previous cast
                 // const replyCast = await replytoBot.getReplytoBot()
@@ -193,9 +200,21 @@ export class ListenBot {
                     lastAttempt: new Date()
                 });
 
+                // get reply and check for coauthors
+                const userReply = new FetchReply(hash)
+                const userReplyCast = await userReply.getReplytoBot()
+                const coauthors = userReplyCast.mentioned_fids
+
+                const webhookManager = new WebhookManager();
+                await webhookManager.coauthorsWebhook(fid, hash, coauthors)
+
+                this.storyState.updateConversation(fid, {
+                    coauthorFid: coauthors
+                });
+
                 return {
                     success: true,
-                    stage: 3,
+                    stage: 4,
                     message: 'bot replied to user with story',
                     hash: hash
                 } 
@@ -206,6 +225,24 @@ export class ListenBot {
                     success: false,
                     stage: 3,
                     message: 'error waiting for user reply',
+                    hash: null,
+                    error: error instanceof Error ? error.message : 'unknown error'
+                }
+            }
+        }
+        
+        // multiplayer mode
+        if (currentStage === 4) {
+            try {
+
+                // bot replies with summary of story + instructions for new coauthor
+
+            } catch (error) {
+                console.error('[ERROR] in stage 4:', error);
+                return {
+                    success: false,
+                    stage: 4,
+                    message: 'error in stage 4',
                     hash: null,
                     error: error instanceof Error ? error.message : 'unknown error'
                 }
@@ -234,13 +271,22 @@ export class ListenBot {
         console.log('[LOG WBH author fid] : ', event.data.author?.fid)
         console.log('[LOG WBH mentioned profiles] : ', event.data.mentioned_profiles)
         console.log('[LOG WBH parent author fid] : ', event.data.parent_author?.fid)
-        
+
+        const conversation = this.storyState.conversations.get(event.data.author?.fid)
+        const coAuthors = conversation?.coauthorFid
+        console.log('[LOG WBH coauthors] : ', coAuthors)
+
+        const parent_hash = conversation?.parent_hash
+        console.log('[LOG WBH parent hash] : ', parent_hash)
+
          // Check if we've already replied to this hash
          if (this.repliedHashes.has(event.data.hash)) {
             console.log('Already replied to hash:', event.data.hash);
             return;
         }
 
+        // level 1: The bot is mentioned in a cast for the first time.
+        // TODO: add limit that mentioned_profiles can only be lenght = 1?
         if (event.type === 'cast.created' && 
             event.data.mentioned_profiles?.some(profile => profile.fid == 913741) &&
             event.data.author.fid != 913741 &&
@@ -251,6 +297,7 @@ export class ListenBot {
                 const user_name = event.data.author?.username;
                 const user_fid = event.data.author?.fid;
                 const user_cast = event.data.text
+
 
                 switch (stage) {
                     case 'show_yourself':
@@ -284,35 +331,36 @@ export class ListenBot {
                 }
 
         } 
+
+        // level 3: conversation with the bot
+        // limit to single player mode??
         if (event.type === 'cast.created' && 
             event.data.parent_author?.fid == 913741 && // replies to bot
             event.data.author?.fid != 913741 // not the bot's own cast (so the bot should reply to replies to it, but not reply to itself)
             ) { 
                 try {
                     console.log('[LOG WBH] : ', 'reply from ', event.data.author?.username, 'detected, casting ', event.data.text)
+                    console.log('[LOG WBH] : ', 'reply from ', event.data.author?.username, ' mentioned profiles ', event.data.mentioned_profiles)
                     const user_fid = event.data.author?.fid;
                     const castHash = event.data.hash;
                     const user_name = event.data.author?.username;
                     const user_cast = event.data.text
+                    const mentioned_profiles = event.data.mentioned_profiles
                     
                     // check text if it mentions register/ Story protocol or if another person has been mentioned. 
                     // const conversation = this.storyState.conversations.get(user_fid);
+                    // get current conversation to check if parent hash already set
+                    const currentConversation = this.storyState.conversations.get(user_fid);
 
-                    this.storyState.jumpintoConveration(user_fid, {
-                        stage: 3,
-                        hash: castHash,
-                        username: user_name,
-                        usercast: user_cast,
-                        lastAttempt: new Date()
-                    });                    
-                    // // If we're in stage 2 and this is a reply to our message, move to stage 3
-                    // // this is currently creating an error as we are at stage 1 everytime
-                    // // the bot restarts
-                    // if (conversation && conversation.stage === 2) {
-                    //     console.log('[DEBUG] Moving from stage 2 to 3 for reply');
-                        
-                    //     });
-                    // }
+                    if (!mentioned_profiles) {
+                        this.storyState.jumpintoConveration(user_fid, castHash, {
+                            stage: 3,
+                            hash: castHash,
+                            parent_hash: currentConversation?.parent_hash || castHash,
+                            username: user_name,
+                            usercast: user_cast,
+                            lastAttempt: new Date()
+                        });
                     
                     // Continue the story flow with the reply
                     const result = await this.handleStoryFlow(
@@ -321,15 +369,63 @@ export class ListenBot {
                         user_name,
                         user_cast
                     );
+
                     console.log('[DEBUG] Story flow result from reply:', result);
                     return result;
+                     }
                 } catch (error) {
                     console.error('[ERROR] handling reply:', error);
                     return await this.botPosting.botSaysHi("nothing working. come back later plz. @kbc error here", event.data.hash)
                 }
             }
+
+        // level 4: multiplayer mode???
+        if (event.type === 'cast.created' &&
+            event.data.parent_author?.fid == 913741 && // bot is the parent fid
+            event.data.mentioned_profiles?.some(profile => coAuthors?.includes(profile.fid))
+        ) { 
+            try {
+                console.log('[TEST] parent hash', event.data.parent_hash)
+                console.log('[TEST] parent hash', parent_hash)
+                console.log('[TEST] thread hash', event.data.thread_hash)
+                // bot replies with summary of story + instructions for new co-author. 
+                console.log('[LOG WBH] : ', 'user1 ', event.data.author?.username, ' tagged ', event.data.mentioned_profiles)
+
+                const coauthors_name = event.data.mentioned_profiles.map(profile => profile.username)
+                console.log('[LOG WBH] : ', 'coauthors_name', coauthors_name)
+
+                let storySummaryText: Cast[] = [];
+                if (parent_hash){
+                    // summary of thread starting with initial parent hash (as much as possible)
+                    const storySummary = new FetchReply(parent_hash)
+                    const storySummaryText = await storySummary.getThreadSummary(5)
+                    console.log('[LOG WBH] : ', 'thread summary', storySummaryText)
+                }
+
+                // summary of more current thread (thread summary with reply depth 2 or 3)
+                const threadSummary = new FetchReply(event.data.thread_hash)
+                const threadSummaryText = await threadSummary.getThreadSummary(5)
+                console.log('[LOG WBH] : ', 'thread summary', threadSummaryText)
+
+                // bot replies with summary of story + instructions for new co-author
+                const worlbuildingMPPrompt = this.prompt.worldbuilding_multiplayer_storysummary(
+                    storySummaryText, threadSummaryText, coauthors_name)
+                const botStory = await this.botThinking.callGaiaStorywriting(
+                    this.prompt.worldbuilding_system_prompt,
+                    worlbuildingMPPrompt)
+
+                const botReply = await this.botPosting.botSaysHi(botStory, event.data.hash)
+                console.log('[LOG WBH] : ', 'bot reply', botReply)
+                return botReply
+
+            } catch (error) {
+                console.error('[ERROR] handling mentioned:',error );
+                return await this.botPosting.botSaysHi("nothing working. come back later plz. @kbc error here", event.data.hash)
+            }
+            
+        }
          else {
-            console.log('❌ Not a mention event', event.type);
+            console.log('❌ Not a relevant event', event.type);
 
             // const botTalking = new BotTalking()
             // const castHash = event.data.hash
@@ -337,6 +433,7 @@ export class ListenBot {
             // const botSaysHiResponse = await botTalking.botSaysHi(botfailurereply, castHash)
             // return botSaysHiResponse
         }
+    
     // After successfully posting a reply, mark the hash as replied
     this.repliedHashes.add(event.data.hash);
     }

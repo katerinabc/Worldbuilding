@@ -119,12 +119,14 @@ export class FetchReply {
             console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
             
             const replyCast = response.data.cast;
+            const mentioned_fids = response.data.mentioned_fids;
+            // what happens if mentions_fids is empty?
             if (!replyCast) {
                 console.log('[API RESPONSE] No cast found in response');
                 throw new Error('No cast found in response');
             }
             
-            return { cast: replyCast };
+            return { cast: replyCast, mentioned_fids: mentioned_fids };
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -146,7 +148,7 @@ export class FetchReply {
         }
     }
 
-    async getThreadSummary(): Promise<Cast[]> {
+    async getThreadSummary(depth: number = 2): Promise<Cast[]> {
         try {
             console.log('[LOG] Getting thread summary for hash:', this.hash);
             const url = `${this.baseUrl}/farcaster/cast/conversation`;
@@ -157,7 +159,7 @@ export class FetchReply {
             const params = {
                 identifier: this.hash,
                 type: 'hash',
-                reply_depth: 3, // default 2 range 1-5
+                reply_depth: depth, // default 2 range 1-5
                 fold: 'above', //filter out replies below the fold (spammy)
                 limit: 20 // default 20
             };
@@ -185,8 +187,8 @@ export class FetchReply {
                 }
             );
             
-            console.log('[API RESPONSE] Status:', response.status);
-            console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
+            // console.log('[API RESPONSE] Status:', response.status);
+            // console.log('[API RESPONSE] Data:', JSON.stringify(response.data, null, 2));
 
             // Add defensive checks and logging
             console.log('[LOG] Conversation object:', response.data.conversation);

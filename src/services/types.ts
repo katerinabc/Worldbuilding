@@ -133,6 +133,7 @@ export interface ThreadSummaryResponse {
 
 export interface FetchSingleCast {
     cast: Cast;
+    mentioned_fids: number[];
 }
 
 // TYPES FOR MEMORY SERVICE

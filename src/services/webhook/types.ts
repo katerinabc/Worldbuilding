@@ -105,8 +105,10 @@ export interface WebhookEvent {
 export interface Conversation {
     stage: number;
     hash: string;
+    parent_hash: string;
     username: string;
-    fid: number;
+    fid: number; // this is fid who started the story
+    coauthorFid: number[]; // these are the ones who got tagged
     usercast: string;
     retries: number;
     lastAttempt: Date;
@@ -128,12 +130,14 @@ export class StoryState {
         return StoryState.instance;
     }
 
-    startNewConversation(fid: number, hash: string, username: string) {
+    startNewConversation(fid: number, hash: string, parent_hash: string, username: string) {
         this.conversations.set(fid, {
             stage: 1,
             hash,
+            parent_hash,
             username,
             fid,
+            coauthorFid: [],
             usercast: '',
             retries: 0,
             lastAttempt: new Date()
@@ -151,14 +155,16 @@ export class StoryState {
         }
     }
 
-    jumpintoConveration(fid: number, updates: Partial<Conversation>) {
+    jumpintoConveration(fid: number, parent_hash: string,updates: Partial<Conversation>) {
         console.log('[LOG types] jumping to stage 3');
         this.conversations.set(fid, {
             stage: 3,
             hash: updates.hash || '',
+            parent_hash: parent_hash,
             username: updates.username || '',
             usercast: updates.usercast || '',
             fid: fid,
+            coauthorFid: updates.coauthorFid || [],
             retries: updates.retries || 0,
             lastAttempt: updates.lastAttempt || new Date()
         });
