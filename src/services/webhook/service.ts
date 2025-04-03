@@ -60,7 +60,7 @@ export class ListenBot {
 
         if (!conversation) {
             // New story conversation
-            this.storyState.startNewConversation(fid, hash, username);
+            this.storyState.startNewConversation(fid, hash, username, user_cast);
         }
 
         const currentStage = conversation ? conversation.stage : 1;
