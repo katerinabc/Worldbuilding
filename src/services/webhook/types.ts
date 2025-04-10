@@ -18,7 +18,7 @@ import { StringLiteral } from "typescript";
 
 export interface StoryFlowResult {
     success: boolean;
-    stage: number;
+    stage: string;
     message: string;
     hash: string | null;
     error?: string;
@@ -103,7 +103,7 @@ export interface WebhookEvent {
 }
 
 export interface Conversation {
-    stage: number;
+    stage: string;
     hash: string;
     parent_hash: string;
     username: string;
@@ -132,7 +132,7 @@ export class StoryState {
 
     startNewConversation(fid: number, hash: string, parent_hash: string, username: string) {
         this.conversations.set(fid, {
-            stage: 1,
+            stage: 'init',
             hash,
             parent_hash,
             username,
@@ -158,7 +158,7 @@ export class StoryState {
     jumpintoConveration(fid: number, parent_hash: string,updates: Partial<Conversation>) {
         console.log('[LOG types] jumping to stage 3');
         this.conversations.set(fid, {
-            stage: 3,
+            stage: 'singleplayer',
             hash: updates.hash || '',
             parent_hash: parent_hash,
             username: updates.username || '',

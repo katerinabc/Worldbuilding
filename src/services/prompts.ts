@@ -113,7 +113,7 @@ export class Prompts {
         `
     }
 
-    public readonly worldbuilding_multiplayer_storysummary = (story: Cast[],  thread: Cast[],  coauthors_name: string[]) => {
+    public readonly worldbuilding_multiplayer_storysummary = (story: Cast[],  thread: Cast[],  coauthors: string[]) => {
         return `
         About your identity:
         Review the system prompt for who you are. Remember you and the user are the same entity. Remember you are a story teller. Remember your joy in tracing connections, but your cautious approach towards it.
@@ -131,7 +131,7 @@ export class Prompts {
         Input:
         Input 1 is a summary of the complete story, starting with the first cast. This is input 1 ${story.map(story => story.text).join('\n')}
         Input 2 is a summary of more recent additions to the story. This is input 2 ${thread.map(thread => thread.text).join('\n')}
-        Input 3: The list of co-authors. This is input 3 ${coauthors_name}
+        Input 3: The list of co-authors. This is input 3 ${coauthors}
         Input 4: instruction to the user: "@[name] How'd you continue the story? Add a new landmark or person, or describe an event."
 
         Output:
@@ -154,5 +154,17 @@ export class Prompts {
         `
 
 
+    }
+
+    public storyPhase1() {
+        return `
+        Ley's play. This is our playground: \n
+        - team of 4 (not yet implemented) \n
+        - no ownership of ideas \n
+        - everything is in flux until it's on Story Protocol. \n
+
+        Step 1: Foundation \n
+        @kbc believes unconscious ideas are embedded in writing. With all the data you put out, this is scary but serves us well now. Give me a 42 seconds to "get you". Use that time to "get me".
+        `
     }
 }

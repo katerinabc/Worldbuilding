@@ -338,3 +338,4 @@ Restructure the conversation flow into three distinct modes based on interaction
 - Should we add an agent at the start that interprets the users text and then guides it into the right category
 - consider using [Neynar's cast summary api endpoint](https://api.neynar.com/v2/farcaster/cast/conversation/summary)? 
 
+Final note for today: what I don't like is that the bot's instruction are too prescriptive. It doesn't include word for word what I want it to say
