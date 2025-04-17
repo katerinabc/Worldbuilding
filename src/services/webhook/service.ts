@@ -80,13 +80,13 @@ export class ListenBot {
         }
         
         // single player mode
-        // user and bot make a story together. Ends with new webhook for adding new coauthors.
+        // user and bot make a story together
         // no limit to coauthors right now.              
         if (mode === 'singleplayer') {
             try {
                 console.log('[STAGE] : single player')
                 const storySP = new StorySinglePlayer()
-                return await storySP.singlePlayer(fid, hash, username, user_cast)
+                return await storySP.singlePlayer(fid, hash, thread_hash, username, user_cast)
                 
             } catch (error) {
                 console.error('[ERROR] in SINGPLE player mode:', error);

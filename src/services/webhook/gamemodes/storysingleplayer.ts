@@ -15,9 +15,9 @@ export class StorySinglePlayer {
         this.prompt = new Prompts()
     }
 
-    public async singlePlayer(fid: number, hash: string, username: string, user_cast: string): Promise<StoryFlowResult> {
+    public async singlePlayer(fid: number, hash: string, threadHash: string, username: string, user_cast: string): Promise<StoryFlowResult> {
     
-        try {
+        try {// hash = has of the cast starting the story thread; user_cast = last cast in the story-thread
             console.log('[STAGE] : singleplayer')
 
             // TODO check if user_cast is really the last cast in the story-thrad
