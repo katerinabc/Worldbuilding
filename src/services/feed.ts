@@ -86,7 +86,7 @@ export class FetchReply {
 
     async getReplytoBot(): Promise<FetchSingleCast> {
         try {
-            const url = `${this.baseUrl}/farcaster/cast`;
+            const url = `${this.baseUrl}/farcaster/cast`; //gets the cast text using the hash
             const headers = {
                 accept: 'application/json',
                 'x-api-key': this.apiKey,

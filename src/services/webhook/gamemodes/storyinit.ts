@@ -35,9 +35,12 @@ export class StoryInitialization {
                 this.prompt.worldbuilding_system_prompt, 
                 worldBuildingPrompt);
             console.log('[TEST] adjectives', adjectives)
+
+            // strip adjectives of any extra text. might not be needed. depends on llm. works well with falcon
             
             // reply with adjectives
-            const storyFoundationHash = await this.botPosting.botSaysHi(adjectives, botHash)
+            const botreply = "These are the foundations of our World: " + adjectives +"\n Now it's your turn: Write a couple of lines about the world. Describe a place in this world, landmark, or entity."
+            const storyFoundationHash = await this.botPosting.botSaysHi(botreply, botHash)
             
             return {
                 success: true,

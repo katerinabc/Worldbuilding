@@ -16,17 +16,17 @@ export class BotThinking {
     private readonly shortTermCollection: any;
 
     constructor() {
-        const settings = EMBEDDER_CONFIG.settings.gaia;
-        // this.baseUrl = settings.baseUrl;
-        this.baseUrl = 'https://llama8b.gaia.domains/v1'; //smaller model
-        this.model = 'llama3b';  // Different model for chat
-
+        // const settings = EMBEDDER_CONFIG.settings.gaia;
+        this.baseUrl = process.env.GAIA_SERVER_URL || '';
+        this.model = process.env.GAIA_MODEL || '';
+        // this.baseUrl = 'https://llama8b.gaia.domains/v1'; //smaller model
+        // this.model = 'llama3b';  // Different model for chat
     }
 
     public async callGaiaDefault(castText: string, prompt: string): Promise<string> {
         try {
             const response = await axios.post(
-                `${this.baseUrl}/chat/completions`,
+                `${this.baseUrl}/v1/chat/completions`,
                 {messages: [
                         {
                             role: 'system',
@@ -67,7 +67,7 @@ export class BotThinking {
     public async callGaiaAdjectives(systemPrompt: string, prompt: string): Promise<string> {
         try {
             const response = await axios.post(
-                `${this.baseUrl}/chat/completions`,
+                `${this.baseUrl}/v1/chat/completions`,
                 {messages: [
                         {
                             role: 'system',
@@ -109,7 +109,7 @@ export class BotThinking {
     public async callGaiaStorywriting(sysPrompt: string, userPrompt: string): Promise<string> {
         try {
             const response = await axios.post(
-                `${this.baseUrl}/chat/completions`,
+                `${this.baseUrl}/v1/chat/completions`,
                 {messages: [
                         {
                             role: 'system',

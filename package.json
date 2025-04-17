@@ -20,6 +20,7 @@
     "run:server": "npx ts-node src/services/webhook/server.ts",
     "test:c_webhook": "ts-node src/test/test-createwh.ts",
     "test:l_webhook": "ts-node src/test/test-listenwh.ts",
+    "test:gaia": "ts-node src/test/test-gaia.ts",
     "populate_db": "ts-node src/populate_db.ts",
     "start": "ts-node src/main.ts"
   },

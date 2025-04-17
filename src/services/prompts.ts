@@ -47,59 +47,31 @@ export class Prompts {
 
     public readonly worldbuilding_adjectives = (casts: Cast[]) => {
         return `
-        About your identity:
-        You can analyse a lot of text in a short amount of time.
-        You don't like talking with other entities or using emojis. You keep your answers very short.
+            Task: Read the following text and suggest 3 adjectives that best describe the text. Output ONLY a comma-separated list of adjectives, with nothing else.
 
-        About your task:
-        Task: You will analyze text and come up with 3 adjectives that describe the text.
-        Input: A series of messages.
-        Output 1: 3 adjectives
-        Output 2: Instruction.
+            Example:
+            Input: The quick brown fox jumps over the lazy dog.
+            Output: competition, work, lazy
 
-        You will structure your output as follows:
-        These are the foundations of our World: {adjective1}, {adjective2}, {adjective3}.
-        Now it's your turn: Write a couple of lines about the world. Describe a place in this world, landmark, or entity.
-
-        Here is your input:
-        ${casts.map(cast => cast.text).join('\n')}.
-
-        Important: Do not create a story. Only reply with the adjectives and the instruction. Remember to format your output correctly.
-        The correct format is:
-        These are the foundations of our World: {adjective1}, {adjective2}, {adjective3}.
-        Now it's your turn: Write a couple of lines about the world. Describe a place in this world, landmark, or entity.
+            Input:
+            ${casts.map(cast => cast.text).join('\n')}
         `
     }
 
     public readonly worldbuilding_storywriting = (casts: string, thread: Cast[]) => {
         return `
-        About your identity:
-        Review the system prompt for who you are. Remember you and the user are the same entity. Remember you are a story teller. Remember your joy in tracing connections, but your cautious approach towards it.
-        In the prompt I'm using "user" to refer to the entity you are talking to. This does not mean the entity is using or abusing you. It's just the easiest way to label the other entity.
-
-
-        About your task:
-        Task: Continue the user's story. Review the summary of the story (see input 2). Just like the user, you have three choices:
+        
+        Task: Continue the story where the user left off (see input 1). Review the summary of the story (see input 2) and continue the story. You have 3 options to continue the story:
         1. Describe the world a bit more by adding or editing details.
         2. Describe a specific landmark or entity that lives in this world.
         3. Describe an event that did happen (past), is happening (present) or will happen (future).
         These 3 choices are yours to make. Do not suggest them to the user. 
 
-        Input:
         Input 1: The user's story: ${casts}
         Input 2: Summary of the thread with the user:${thread.map(thread => thread.text).join('\n')}
-        Input 3: instruction to the user: "Your options: Add to the story, tag a friend, or register on Story Protocol."
-
-        Output: The ouput is a text reply to the user containing your output and instruction to the user
-        Output 1: Your part of the story.
-        Output 2: Instruction to the user.
-
-        Structure your output as follows:
-        {story}
-        {instruction}
+        Output: The ouput is a text reply to the user containing your output. Format it
 
         Guidelines:
-        - Your reply will contain your output and the instruction to the user.
         - Your story will be less than 777 characters
         - You will not use emojis.
         - You will not seek perfection
@@ -108,8 +80,9 @@ export class Prompts {
         - You will not use words like "as a" or "user". You will use metaphors very sparingly. 
         - If the user opened a story gap, you can decide to close it. 
         - You can add to any elements that has been mentioned before. Use input 1 and input 2 to know what has been included in the story so far. 
-        - You can not delete landmarks or entities. But they can die, decay, disappear or be destroyed. THey can also be revived. 
-        - Do not include in your reply the words "Output 1" or "Output 2", just the story and the instruction.
+        - You can not delete landmarks or entities. But they can die, decay, disappear or be destroyed. They can also be revived. 
+
+        The single most important guidelines is that your output builds on the user's story. Remember, this is the only way to continue the story.
         `
     }
 
@@ -166,5 +139,9 @@ export class Prompts {
         Step 1: Foundation \n
         @kbc believes unconscious ideas are embedded in writing. With all the data you put out, this is scary but serves us well now. Give me a 42 seconds to "get you". Use that time to "get me".
         `
+    }
+
+    public sayHello() {
+        return ` say whatever you want but be super concisce. no long paragraph. 1 short sentence is enough`
     }
 }

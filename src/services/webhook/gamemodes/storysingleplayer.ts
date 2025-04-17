@@ -20,17 +20,20 @@ export class StorySinglePlayer {
         try {
             console.log('[STAGE] : singleplayer')
 
+            // TODO check if user_cast is really the last cast in the story-thrad
+
             // get all the casts in the thread
-            const replytoBot = new FetchReply(hash)
-            const threadSummaryText = await replytoBot.getThreadSummary() //default depth: 2
+            const replytoBot = new FetchReply(hash) // this should be casts starting the story-thread
+            const threadSummaryText = await replytoBot.getThreadSummary(3) //default depth: 2
             console.log('[LOG single player] Cast in Thread', threadSummaryText)
 
             // Gaianet: add to the story (prompting LLM)
             const worldBuildingPrompt = this.prompt.worldbuilding_storywriting(
                 // this creates the prompt combinign the general prompt text with input from the user
                 // it needs the user's story (cast) and the thread summary
-                user_cast, 
-                threadSummaryText)
+                user_cast, // this is the last cast in the thread
+                threadSummaryText // this is all the casts in the thread
+            )
             const botStory = await this.botThinking.callGaiaStorywriting(
                 // this calls the LLM with the prompt
                 this.prompt.worldbuilding_system_prompt,

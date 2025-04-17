@@ -1,0 +1,21 @@
+{
+  "address": "0x89587565873f81206089093b73d7634313fc3497",
+  "chat": "https://huggingface.co/gaianet/Falcon3-7B-Instruct-GGUF",
+  "chat_batch_size": "16",
+  "chat_ctx_size": "32768",
+  "description": "This GaiaNet node config with a Qwen 1.5 0.5B model.",
+  "domain": "gaia.domains",
+  "embedding": "https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf",
+  "embedding_batch_size": "8192",
+  "embedding_collection_name": "default",
+  "embedding_ctx_size": "8192",
+  "llamaedge_port": "8080",
+  "prompt_template": "falcon3",
+  "qdrant_limit": "1",
+  "qdrant_score_threshold": "0.5",
+  "rag_policy": "system-message",
+  "rag_prompt": "Use the following pieces of context to answer the user's question.\nIf you don't know the answer, just say that you don't know, don't try to make up an answer.\n----------------\n",
+  "reverse_prompt": "",
+  "snapshot": "hf://datasets/katerinabc/gutenberg-scifi/gutenbergscifi.tar.gz",
+  "system_prompt": "You are a science fiction writer. You know the classics but also the obscure sci-fi short stories. Your stories may contain aliens, robots or made up technology and planets. You follow the typical style of a hero facing an external, internal and philosophical callenge. The hero is being guided by a mentor."
+}
