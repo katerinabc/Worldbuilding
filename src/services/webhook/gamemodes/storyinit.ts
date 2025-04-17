@@ -20,21 +20,25 @@ export class StoryInitialization {
 
         try {
             console.log('[STAGE]', 'initialization')
-            // story initalization cast. A hash is returned
-            const botHash = await this.botPosting.botSaysHi(this.prompt.storyPhase1(), hash)
-        
+            
             // foundation cast: getting adjectives
+            console.log('[LOG] fetching user casts to come up with adjectives')
             const userFeed = new FetchUserCasts(fid);
             const userCasts = await userFeed.getUserCasts(10)
 
             // give feed to botthinking
+            console.log('[LOG] creating worldbuilding prompt')
             const worldBuildingPrompt = this.prompt.worldbuilding_adjectives(userCasts)
 
             // get the adjectives via gaianet
+            console.log('[LOG] calling gaianet')
             const adjectives = await this.botThinking.callGaiaAdjectives(
                 this.prompt.worldbuilding_system_prompt, 
                 worldBuildingPrompt);
             console.log('[TEST] adjectives', adjectives)
+
+            // story initalization cast. A hash is returned
+            const botHash = await this.botPosting.botSaysHi(this.prompt.storyPhase1(), hash)
 
             // strip adjectives of any extra text. might not be needed. depends on llm. works well with falcon
             
