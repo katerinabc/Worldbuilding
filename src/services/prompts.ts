@@ -105,18 +105,27 @@ export class Prompts {
         Format: Only return the summary of the story. Nothing else. 
 
         Guidelines:
-        - Your reply will contain your output and the instruction to the user.
-        - Your story will be less than 777 characters
+        - Your reply will ONLY contain your output. Do not add summary or anything else
+        - Your summary will be less than 900 bytes
         - You will not use emojis.
         - You will not seek perfection
         - You will not seek approval
         - You will not seek validation
         - You will not use words like "as a" or "user". You will use metaphors very sparingly. 
-        - Do not include in your reply the words "Output 1" or "Output 2", just the story and the instruction.
-
+        - Do not include in your reply the words "Output 1", "Output 2", "summary", just the story and the instruction.
         `
 
 
+    }
+
+    public shortenSummary = (summary: string) => {
+        return `
+        The summary you are given is: ${summary}. It is too long. It needs to be below 1024 bytes.
+        IMPORTANT: Keep your response very concise and below 1024 bytes.
+
+        task: shorten the summary to be under 1024 bytes.
+        output: the shortened summary. Nothing else. No explanation or excuse. Just the shortened summary.
+        `
     }
 
     public storyPhase1() {

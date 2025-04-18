@@ -103,28 +103,73 @@ async function runTests() {
         // --- testing if bot can kick off multiplayer mode (multiplayer) ---
         // console.log("\nTesting Gaia Storywriting Call...");
         const worldBuildingPromptMP = prompts.worldbuilding_multiplayer_storysummary(
-            // this creates the prompt combinign the general prompt text with input from the user
+            // this creates the prompt combining the general prompt text with input from the user
             // it needs the user's story (cast) and the thread summary
             threadSummaryTextRecent, // last cast in the thread
             storySummaryText, //summary of thread
             coauthors_name)
         console.log("Generated Prompt:\n", worldBuildingPromptMP);
-        
-        const storyResult = await botThinking.callGaiaNotCreative(
-            prompts.worldbuilding_system_prompt,
-            worldBuildingPromptMP
-        );
 
-        // Format co-authors with @ symbol
-        const taggedCoauthors = coauthors_name.map(author => 
-            author.startsWith('@') ? author : `@${author}`
-        ).join(' ');
-        
-        // Add tagged co-authors to the beginning of the message
-        const replyWithTags = `${botStory} \n ${taggedCoauthors} How'd you continue the story? Add a new landmark or person, or describe an event.`;
+        let attempts = 0;
+        let validResponse = false;
+        let replyWithTags = "";
+        const MAX_ATTEMPTS = 5;
 
-        console.log("Gaia Result:\n", replyWithTags);
+        while (!validResponse && attempts < MAX_ATTEMPTS) {
+            attempts++;
+            console.log(`\n--- Attempt ${attempts}/${MAX_ATTEMPTS} to generate response ---`);
 
+            // First, generate the initial story
+            let storyResult = await botThinking.callGaiaNotCreative(
+                prompts.worldbuilding_system_prompt,
+                worldBuildingPromptMP
+            );
+
+            // If not the first attempt, try to shorten the result
+            if (attempts > 1) {
+                console.log("Attempting to shorten the response...");
+                const shortenPrompt = prompts.shortenSummary(storyResult);
+                storyResult = await botThinking.callGaiaNotCreative(
+                    prompts.worldbuilding_system_prompt,
+                    shortenPrompt
+                );
+            }
+
+            // Format co-authors with @ symbol
+            const taggedCoauthors = coauthors_name.map(author => 
+                author.startsWith('@') ? author : `@${author}`
+            ).join(' ');
+            
+            // Add tagged co-authors to the beginning of the message
+            replyWithTags = `${storyResult} \n ${taggedCoauthors} How'd you continue the story? Add a new landmark or person, or describe an event.`;
+
+            // Check if message is under 1024 bytes (Farcaster limit)
+            const getByteLength = (str: string) => {
+                // Convert string to byte array and get length
+                return new TextEncoder().encode(str).length;
+            };
+            
+            const messageBytes = getByteLength(replyWithTags);
+            console.log(`Message byte length: ${messageBytes}/1024 bytes`);
+            
+            if (messageBytes <= 1024) {
+                console.log("✅ Message is within byte limit!");
+                validResponse = true;
+            } else {
+                console.warn("\n--- WARNING: MESSAGE EXCEEDS 1024 BYTES ---");
+                console.warn(`Attempt ${attempts}/${MAX_ATTEMPTS} failed. Trying again with stricter length constraints...`);
+            }
+        }
+
+        if (validResponse) {
+            console.log("Final Gaia Result (within byte limit):\n", replyWithTags);
+            // Here you would post the message to the platform
+            // botPosting.postMessage(replyWithTags); 
+        } else {
+            console.error("⛔ Failed to generate a response within byte limit after " + MAX_ATTEMPTS + " attempts");
+            // Handle the failure case - maybe fall back to a very short message
+            // or implement a truncation function
+        }
 
     } catch (error) {
         console.error("\n--- TEST FAILED ---");
