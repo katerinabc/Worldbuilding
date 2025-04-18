@@ -29,19 +29,29 @@ export class StoryMultiPlayer {
 
             // get most recent casts in the thread
             const threadSummaryRecent = new FetchReply(hash)
-            const threadSummaryTextRecent = await threadSummaryRecent.getThreadSummary(5)
+            const threadSummaryTextRecent = await threadSummaryRecent.getThreadSummary(2)
             console.log('[MULTIPLAYER] : ', 'thread summary recent', threadSummaryTextRecent)
 
             // create a reply for the coauthors
             const worlbuildingMPPrompt = this.prompt.worldbuilding_multiplayer_storysummary(
                 storySummaryText, threadSummaryTextRecent, coauthors)
-            const botStory = await this.botThinking.callGaiaStorywriting(
+            console.log('[MULTIPLAYER] : ', 'worlbuildingMPPrompt', worlbuildingMPPrompt)
+            const botStory = await this.botThinking.callGaiaNotCreative(
                 this.prompt.worldbuilding_system_prompt,
                 worlbuildingMPPrompt)
+            console.log('[MULTIPLAYER] : ', 'botStory', botStory)
+
+            // Format co-authors with @ symbol
+            const taggedCoauthors = coauthors.map(author => 
+                author.startsWith('@') ? author : `@${author}`
+            ).join(' ');
+            
+            // Add tagged co-authors to the beginning of the message
+            const replyWithTags = `${taggedCoauthors}\n\n${botStory}`;
 
             // post reply for coauthors
-            const botReply = await this.botPosting.botSaysHi(botStory, hash)
-            console.log('[MULTIPLAYER] : ', 'bot reply', botReply)
+            const botReply = await this.botPosting.botSaysHi(replyWithTags, hash)
+            console.log('[MULTIPLAYER] : ', 'bot reply', replyWithTags)
 
             return {
                 success: true,

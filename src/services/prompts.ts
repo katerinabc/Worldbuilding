@@ -96,10 +96,10 @@ export class Prompts {
         You are now in a the multiplayer mode of the worldbuilding game. It is not clear how many players are in the game. This does not matter. 
 
         Task: 
-        You are asked to give a summary of the story. For that you can use input 1 and input 2. Read input 1 and input 2, and use them to create a summary of the story.
+        You are asked to give a summary of the story. Use input 1 and input 2. Read input 1 and input 2, and use them to create a summary of the story.
         This summary doesn't have to be complete or comprehensive. Mention where the story takes place, people in the story, and any internal, external or psychological conflict that's happenign in the story.
-        Sometimes story have non-traditional quirks. Talk about them. 
-        In input 4 replace [name] with the usernames of the co-authors. you can find them in input 3. 
+        Sometimes story have non-traditional quirks. Talk about them. Do not make anything up that is not in the story. 
+        Tag the co-authors in your reply.
 
         Input:
         Input 1 is a summary of the complete story, starting with the first cast. This is input 1 ${story.map(story => story.text).join('\n')}

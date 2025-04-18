@@ -64,7 +64,7 @@ export class BotThinking {
         }
     }
 
-    public async callGaiaAdjectives(systemPrompt: string, prompt: string): Promise<string> {
+    public async callGaiaNotCreative(systemPrompt: string, prompt: string): Promise<string> {
         try {
             const response = await axios.post(
                 `${this.baseUrl}/v1/chat/completions`,

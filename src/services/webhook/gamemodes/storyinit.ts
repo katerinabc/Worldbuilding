@@ -32,7 +32,7 @@ export class StoryInitialization {
 
             // get the adjectives via gaianet
             console.log('[LOG] calling gaianet')
-            const adjectives = await this.botThinking.callGaiaAdjectives(
+            const adjectives = await this.botThinking.callGaiaNotCreative(
                 this.prompt.worldbuilding_system_prompt, 
                 worldBuildingPrompt);
             console.log('[TEST] adjectives', adjectives)
