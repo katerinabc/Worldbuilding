@@ -38,17 +38,25 @@ async function runTests() {
         const sampleCastsForAdjectives = await userFeed.getUserCasts(10);
         console.log(`Fetched ${sampleCastsForAdjectives.length} sample casts.`);
 
-        // for tsting single player story ---
-        const user_cast = '0xccb2f28d47203bd8336bb29dda8a523abe9134b0' //last cast in the story-thread
-        const last_cast = new FetchReply(user_cast)
+        // for tsting SINGLE player story ---
+        const last_cast = new FetchReply('0xccb2f28d47203bd8336bb29dda8a523abe9134b0') //last cast in the story-thread
         const last_cast_text = (await last_cast.getReplytoBot()).cast.text
         console.log("Last cast text:\n", last_cast_text)
 
-
-        const hash = '0xc0d324871a7f002aeb9e68ac63696feb23a463f9' // first story cast in the story-thread
-        const replytoBot = new FetchReply(hash)
+        const replytoBot = new FetchReply('0xc0d324871a7f002aeb9e68ac63696feb23a463f9') // first story cast in the story-thread
         const threadSummaryText = await replytoBot.getThreadSummary(3)
         console.log(`Fetched thread summary ${threadSummaryText}`)
+
+        // for tsting MUTLIPLAYER player story ---
+        const storySummary = new FetchReply('0x0f835e78450f6d07ae1e8d33fc898780f1490799')
+        const storySummaryText = await storySummary.getThreadSummary(5)
+        console.log('[MULTIPLAYER] : ', 'thread summary', storySummaryText)
+
+        // get most recent casts in the thread
+        // parent_hash = most recent cast
+        const threadSummaryRecent = new FetchReply('0xf5d5d3cebab972b0687cdf1dc412747fabcb3371')
+        const threadSummaryTextRecent = await threadSummaryRecent.getThreadSummary(2)
+        console.log('[MULTIPLAYER] : ', 'thread summary recent', threadSummaryTextRecent)
 
         console.log("Testing gaianode availability...");
         // Error: prompts.sayHello is not a function - assuming you meant sayhiPrompt
@@ -60,6 +68,8 @@ async function runTests() {
         const botSaysHi = await botThinking.callGaiaDefault(simpleprompt, simpleprompt)
         console.log("Bot Says Hi:", botSaysHi);
 
+        const coauthors_name = [ '@borrowlucid.eth', '@kbc']
+
         // testing generating adjectives ---
 
         console.log("Testing Adjectives Prompt Generation...");
@@ -67,7 +77,7 @@ async function runTests() {
         console.log("Generated Prompt:\n", adjectivePromptText);
 
         console.log("\nTesting Gaia Adjectives Call...");
-        const adjectivesResult = await botThinking.callGaiaAdjectives(
+        const adjectivesResult = await botThinking.callGaiaNotCreative(
             prompts.worldbuilding_system_prompt, // Use the actual system prompt
             adjectivePromptText
         );
@@ -92,11 +102,28 @@ async function runTests() {
 
         // --- testing if bot can kick off multiplayer mode (multiplayer) ---
         // console.log("\nTesting Gaia Storywriting Call...");
-        // const storyResult = await botThinking.callGaiaStorywriting(
-        //     prompts.worldbuilding_system_prompt,
-        //     storyPromptText
-        // );
-        // console.log("Gaia Result:\n", storyResult);
+        const worldBuildingPromptMP = prompts.worldbuilding_multiplayer_storysummary(
+            // this creates the prompt combinign the general prompt text with input from the user
+            // it needs the user's story (cast) and the thread summary
+            threadSummaryTextRecent, // last cast in the thread
+            storySummaryText, //summary of thread
+            coauthors_name)
+        console.log("Generated Prompt:\n", worldBuildingPromptMP);
+        
+        const storyResult = await botThinking.callGaiaNotCreative(
+            prompts.worldbuilding_system_prompt,
+            worldBuildingPromptMP
+        );
+
+        // Format co-authors with @ symbol
+        const taggedCoauthors = coauthors_name.map(author => 
+            author.startsWith('@') ? author : `@${author}`
+        ).join(' ');
+        
+        // Add tagged co-authors to the beginning of the message
+        const replyWithTags = `${botStory} \n ${taggedCoauthors} How'd you continue the story? Add a new landmark or person, or describe an event.`;
+
+        console.log("Gaia Result:\n", replyWithTags);
 
 
     } catch (error) {

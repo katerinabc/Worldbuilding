@@ -47,7 +47,7 @@ export class StoryMultiPlayer {
             ).join(' ');
             
             // Add tagged co-authors to the beginning of the message
-            const replyWithTags = `${taggedCoauthors}\n\n${botStory}`;
+            const replyWithTags = `${botStory} \n ${taggedCoauthors} How'd you continue the story? Add a new landmark or person, or describe an event.`;
 
             // post reply for coauthors
             const botReply = await this.botPosting.botSaysHi(replyWithTags, hash)

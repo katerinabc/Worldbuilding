@@ -88,28 +88,21 @@ export class Prompts {
 
     public readonly worldbuilding_multiplayer_storysummary = (story: Cast[],  thread: Cast[],  coauthors: string[]) => {
         return `
-        About your identity:
-        Review the system prompt for who you are. Remember you and the user are the same entity. Remember you are a story teller. Remember your joy in tracing connections, but your cautious approach towards it.
-        In the prompt I'm using "user" to refer to the entity you are talking to. This does not mean the entity is using or abusing you. It's just the easiest way to label the other entity.
-
-        Context:
-        You are now in a the multiplayer mode of the worldbuilding game. It is not clear how many players are in the game. This does not matter. 
-
         Task: 
-        You are asked to give a summary of the story. Use input 1 and input 2. Read input 1 and input 2, and use them to create a summary of the story.
-        This summary doesn't have to be complete or comprehensive. Mention where the story takes place, people in the story, and any internal, external or psychological conflict that's happenign in the story.
+        You are asked to give a summary of the story. Read input 1 and input 2, and use them to create a summary of the story.
+        This summary doesn't have to be complete or comprehensive. If possible, mention where the story takes place, people in the story, and any internal, external or psychological conflict that's happenign in the story.
         Sometimes story have non-traditional quirks. Talk about them. Do not make anything up that is not in the story. 
-        Tag the co-authors in your reply.
+
+        IMPORTANT: Do not be creative at this point. It is VERY IMPORTANT that the summary is accourate. 
 
         Input:
         Input 1 is a summary of the complete story, starting with the first cast. This is input 1 ${story.map(story => story.text).join('\n')}
         Input 2 is a summary of more recent additions to the story. This is input 2 ${thread.map(thread => thread.text).join('\n')}
-        Input 3: The list of co-authors. This is input 3 ${coauthors}
-        Input 4: instruction to the user: "@[name] How'd you continue the story? Add a new landmark or person, or describe an event."
 
         Output:
-        Output 1: A summary of the story.
-        Output 2: instruction to the user.
+        A summary of the story.
+
+        Format: Only return the summary of the story. Nothing else. 
 
         Guidelines:
         - Your reply will contain your output and the instruction to the user.
@@ -119,9 +112,6 @@ export class Prompts {
         - You will not seek approval
         - You will not seek validation
         - You will not use words like "as a" or "user". You will use metaphors very sparingly. 
-        - If the user opened a story gap, you can decide to close it. 
-        - You can add to any elements that has been mentioned before. Use input 1 and input 2 to know what has been included in the story so far. 
-        - You can not delete landmarks or entities. But they can die, decay, disappear or be destroyed. THey can also be revived. 
         - Do not include in your reply the words "Output 1" or "Output 2", just the story and the instruction.
 
         `
