@@ -15,7 +15,7 @@ export class StoryMultiPlayer {
         this.prompt = new Prompts()
     }
 
-    public async multiPlayer(fid: number, hash: string, thread_hash: string, username: string, user_cast: string, coauthors: string[]): Promise<StoryFlowResult>{
+    public async multiPlayer(fid: number, hash: string, parent_hash: string | null, thread_hash: string, username: string, user_cast: string, coauthors: string[]): Promise<StoryFlowResult>{
 
         try {
             console.log('[STAGE] : multi player mode')
@@ -28,7 +28,7 @@ export class StoryMultiPlayer {
             console.log('[MULTIPLAYER] : ', 'thread summary', storySummaryText)
 
             // get most recent casts in the thread
-            const threadSummaryRecent = new FetchReply(hash)
+            const threadSummaryRecent = new FetchReply(parent_hash || hash)
             const threadSummaryTextRecent = await threadSummaryRecent.getThreadSummary(2)
             console.log('[MULTIPLAYER] : ', 'thread summary recent', threadSummaryTextRecent)
 
@@ -47,21 +47,31 @@ export class StoryMultiPlayer {
                 console.log(`\n--- Attempt ${attempts}/${MAX_ATTEMPTS} to generate response ---`);
     
                 // create a reply for the coauthors
-                // First, generate the initial story
-                let botStory = await this.botThinking.callGaiaNotCreative(
+                // First, generate the initial story - only done once
+                const botStory_original = await this.botThinking.callGaiaNotCreative(
                     this.prompt.worldbuilding_system_prompt,
                     worlbuildingMPPrompt
                 );
-                console.log('[MULTIPLAYER] : ', 'botStory', botStory)
+                console.log('[MULTIPLAYER] : ', 'original story length', botStory_original.length);
     
-                // If not the first attempt, try to shorten the result
+                // For each attempt, start with the original and try to shorten if needed
+                let botStory = botStory_original;
                 if (attempts > 1) {
-                    console.log("Attempting to shorten the response...");
-                    const shortenPrompt = this.prompt.shortenSummary(botStory);
+                    console.log(`Attempt ${attempts}: Shortening the original story...`);
+                    // Add increasing shortening instructions based on attempt number
+                    let shortenInstruction = "";
+                    if (attempts == 2) shortenInstruction = " Make it about 25% shorter.";
+                    if (attempts == 3) shortenInstruction = " Make it about 50% shorter.";
+                    if (attempts >= 4) shortenInstruction = " Make it extremely concise, at most 400 characters.";
+                    
+                    const shortenPrompt = this.prompt.shortenSummary(botStory_original + shortenInstruction);
+                    
                     botStory = await this.botThinking.callGaiaNotCreative(
                         this.prompt.worldbuilding_system_prompt,
                         shortenPrompt
                     );
+                    
+                    console.log(`Original length: ${botStory_original.length}, Shortened length: ${botStory.length}`);
                 }
     
                 // Format co-authors with @ symbol

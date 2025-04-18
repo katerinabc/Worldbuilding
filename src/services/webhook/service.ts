@@ -58,7 +58,7 @@ export class ListenBot {
         return 'default';
     }
 
-    private async handleStoryFlow(fid: number, hash: string, thread_hash: string, username: string, user_cast: string, mode: string, coauthors_name: string[]): Promise<StoryFlowResult> {
+    private async handleStoryFlow(fid: number, hash: string, parent_hash: string | null, thread_hash: string, username: string, user_cast: string, mode: string, coauthors_name: string[]): Promise<StoryFlowResult> {
 
         // bot being mentioned for the first time
         if (mode === 'init') {
@@ -105,7 +105,7 @@ export class ListenBot {
             try {
                 console.log('[STAGE] : multiplayer')
                 const storyMP = new StoryMultiPlayer()
-                return await storyMP.multiPlayer(fid, hash, thread_hash, username, user_cast, coauthors_name)
+                return await storyMP.multiPlayer(fid, hash, parent_hash, thread_hash, username, user_cast, coauthors_name)
                
 
             } catch (error) {
@@ -171,6 +171,7 @@ export class ListenBot {
                 console.log('[LOG WBH]: Level 1: initialization of story')
                 const stage = this.parseConversationStage(event.data.text);
                 const castHash = event.data.hash;
+                const parent_hash = event.data.parent_hash
                 const user_name = event.data.author?.username;
                 const user_fid = event.data.author?.fid;
                 const user_cast = event.data.text
@@ -187,6 +188,7 @@ export class ListenBot {
                         const result = await this.handleStoryFlow(
                             user_fid,
                             castHash,
+                            parent_hash,
                             threadHash,
                             user_name,
                             user_cast,
@@ -226,11 +228,12 @@ export class ListenBot {
                     console.log('[LOG WBH] : ', 'reply from ', event.data.author?.username, ' mentioned profiles ', event.data.mentioned_profiles)
                     const user_fid = event.data.author?.fid;
                     const castHash = event.data.hash;
+                    const parent_hash = event.data.parent_hash
+                    const threadHash = event.data.thread_hash
                     const user_name = event.data.author?.username;
                     const user_cast = event.data.text
                     const mentioned_profiles = event.data.mentioned_profiles
                     const mode = 'singleplayer'
-                    const threadHash = event.data.thread_hash
                     const coauthors_name: string[] = []
 
                     // check text if it mentions register/ Story protocol or if another person has been mentioned. 
@@ -253,6 +256,7 @@ export class ListenBot {
                     const result = await this.handleStoryFlow(
                         user_fid,
                         castHash,
+                        parent_hash,
                         threadHash,
                         user_name,
                         user_cast,
@@ -275,22 +279,22 @@ export class ListenBot {
             event.data.mentioned_profiles?.length > 0 
         ) { 
             try {
-                console.log('[LOG WBH]: Level 4: multi player mode')
-                console.log('[TEST] parent hash', event.data.parent_hash)
-                console.log('[TEST] parent hash', event.data.parent_hash)
-                console.log('[TEST] thread hash', event.data.thread_hash)
+                console.log('[LOG MP]: Level 4: multi player mode')
+                console.log('[LOG MP] parent hash', event.data.parent_hash)
+                console.log('[LOG MP] thread hash', event.data.thread_hash)
                 // bot replies with summary of story + instructions for new co-author. 
-                console.log('[LOG WBH] : ', 'user1 ', event.data.author?.username, ' tagged ', event.data.mentioned_profiles)
+                console.log('[LOG MP] : ', 'user1 ', event.data.author?.username, ' tagged ', event.data.mentioned_profiles)
 
                 const coauthors_name = event.data.mentioned_profiles.map(profile => profile.username)
                 const user_fid = event.data.author?.fid;
                 const castHash = event.data.hash;
-                const threadHash = event.data.thread_hash
+                const parent_hash = event.data.parent_hash;
+                const threadHash = event.data.thread_hash;
                 const user_name = event.data.author?.username;
                 const user_cast = event.data.text
                 const currentConversation = this.storyState.conversations.get(user_fid);
                 const mode = 'multiplayer'
-                console.log('[LOG WBH] : ', 'coauthors_name', coauthors_name)
+                console.log('[LOG MP] : ', 'coauthors_name', coauthors_name)
 
                 if(coauthors_name) {
                     this.storyState.jumpintoConveration(user_fid, castHash, {
@@ -307,6 +311,7 @@ export class ListenBot {
                 const result = await this.handleStoryFlow(
                     user_fid,
                     castHash,
+                    parent_hash ? parent_hash : castHash,
                     threadHash,
                     user_name,
                     user_cast,
