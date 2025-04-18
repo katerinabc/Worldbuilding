@@ -21,13 +21,14 @@ export class StoryMultiPlayer {
             console.log('[STAGE] : multi player mode')
 
             // get all casts in the thread
+            // replace this with API endpoint for Ai summary?
             // increase 5 for more context. 
-            const storySummary = new FetchReply(hash)
+            const storySummary = new FetchReply(thread_hash)
             const storySummaryText = await storySummary.getThreadSummary(5)
             console.log('[MULTIPLAYER] : ', 'thread summary', storySummaryText)
 
             // get most recent casts in the thread
-            const threadSummaryRecent = new FetchReply(thread_hash)
+            const threadSummaryRecent = new FetchReply(hash)
             const threadSummaryTextRecent = await threadSummaryRecent.getThreadSummary(5)
             console.log('[MULTIPLAYER] : ', 'thread summary recent', threadSummaryTextRecent)
 
